@@ -1,0 +1,258 @@
+<div class="min-h-screen bg-gray-50">
+    <div class="p-6">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
+            <p class="text-gray-600 mt-2">View and manage your personal information</p>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="flex justify-center items-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+
+        <!-- Profile Content -->
+        <div *ngIf="!loading && clientProfile" class="space-y-6">
+            <!-- Profile Header Card -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span class="text-2xl font-bold text-blue-600">
+                                {{ clientProfile.firstName.charAt(0) }}{{ clientProfile.lastName.charAt(0) }}
+                            </span>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900">
+                                {{ clientProfile.firstName }} {{ clientProfile.lastName }}
+                            </h2>
+                            <p class="text-gray-600">{{ clientProfile.companyName }}</p>
+                            <div class="flex items-center space-x-4 mt-1">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full" 
+                                      [class]="getStatusColor(clientProfile.status)">
+                                    {{ clientProfile.status }}
+                                </span>
+                                <span class="text-sm text-gray-500">
+                                    Member since {{ clientProfile.registrationDate | date:'MMM yyyy' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button *ngIf="!editing" (click)="startEditing()"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Edit Profile
+                        </button>
+                        <button *ngIf="editing" (click)="cancelEditing()"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button *ngIf="editing" (click)="saveProfile()" [disabled]="saving"
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors">
+                            <svg *ngIf="saving" class="animate-spin w-4 h-4 mr-2 inline" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            {{ saving ? 'Saving...' : 'Save Changes' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Form -->
+            <form [formGroup]="profileForm" class="space-y-6">
+                <!-- Personal Information -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">Personal Information</h3>
+                        <p class="text-sm text-gray-600 mt-1">Your basic personal details</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
+                                <input type="text" formControlName="firstName" 
+                                       [readonly]="!isFieldEditable('firstName')"
+                                       [class]="getFieldClass('firstName') + ' w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'"
+                                       [placeholder]="isFieldEditable('firstName') ? 'Enter first name' : ''">
+                                <div *ngIf="profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched" 
+                                     class="text-red-600 text-sm mt-1">
+                                    First name is required and must be at least 2 characters
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
+                                <input type="text" formControlName="lastName" 
+                                       [readonly]="!isFieldEditable('lastName')"
+                                       [class]="getFieldClass('lastName') + ' w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'"
+                                       [placeholder]="isFieldEditable('lastName') ? 'Enter last name' : ''">
+                                <div *ngIf="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched" 
+                                     class="text-red-600 text-sm mt-1">
+                                    Last name is required and must be at least 2 characters
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                                <input type="email" formControlName="email" readonly
+                                       class="bg-gray-100 cursor-not-allowed w-full px-3 py-2 border rounded-lg">
+                                <p class="text-xs text-gray-500 mt-1">Contact admin to change email address</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                                <input type="tel" formControlName="phone" 
+                                       [readonly]="!isFieldEditable('phone')"
+                                       [class]="getFieldClass('phone') + ' w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'"
+                                       [placeholder]="isFieldEditable('phone') ? 'Enter phone number' : ''">
+                                <div *ngIf="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched" 
+                                     class="text-red-600 text-sm mt-1">
+                                    Please enter a valid phone number
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Company Information -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">Company Information</h3>
+                        <p class="text-sm text-gray-600 mt-1">Your business details</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                            <input type="text" formControlName="companyName" readonly
+                                   class="bg-gray-100 cursor-not-allowed w-full px-3 py-2 border rounded-lg">
+                            <p class="text-xs text-gray-500 mt-1">Contact admin to change company name</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">GST Number</label>
+                                <input type="text" formControlName="gstNumber" readonly
+                                       class="bg-gray-100 cursor-not-allowed w-full px-3 py-2 border rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">PAN Number</label>
+                                <input type="text" formControlName="panNumber" readonly
+                                       class="bg-gray-100 cursor-not-allowed w-full px-3 py-2 border rounded-lg">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Client Type</label>
+                                <input type="text" [value]="getClientTypeDisplay(clientProfile.clientType || '')" readonly
+                                       class="bg-gray-100 cursor-not-allowed w-full px-3 py-2 border rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Industry</label>
+                                <input type="text" formControlName="industry" readonly
+                                       class="bg-gray-100 cursor-not-allowed w-full px-3 py-2 border rounded-lg">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Information -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">Address Information</h3>
+                        <p class="text-sm text-gray-600 mt-1">Your business address</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Address *</label>
+                            <textarea formControlName="address" rows="3"
+                                      [readonly]="!isFieldEditable('address')"
+                                      [class]="getFieldClass('address') + ' w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none'"
+                                      [placeholder]="isFieldEditable('address') ? 'Enter complete address' : ''"></textarea>
+                            <div *ngIf="profileForm.get('address')?.invalid && profileForm.get('address')?.touched" 
+                                 class="text-red-600 text-sm mt-1">
+                                Address is required
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                                <input type="text" formControlName="city" 
+                                       [readonly]="!isFieldEditable('city')"
+                                       [class]="getFieldClass('city') + ' w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'"
+                                       [placeholder]="isFieldEditable('city') ? 'Enter city' : ''">
+                                <div *ngIf="profileForm.get('city')?.invalid && profileForm.get('city')?.touched" 
+                                     class="text-red-600 text-sm mt-1">
+                                    City is required
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">State *</label>
+                                <input type="text" formControlName="state" 
+                                       [readonly]="!isFieldEditable('state')"
+                                       [class]="getFieldClass('state') + ' w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'"
+                                       [placeholder]="isFieldEditable('state') ? 'Enter state' : ''">
+                                <div *ngIf="profileForm.get('state')?.invalid && profileForm.get('state')?.touched" 
+                                     class="text-red-600 text-sm mt-1">
+                                    State is required
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Pincode *</label>
+                                <input type="text" formControlName="pincode" 
+                                       [readonly]="!isFieldEditable('pincode')"
+                                       [class]="getFieldClass('pincode') + ' w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'"
+                                       [placeholder]="isFieldEditable('pincode') ? 'Enter pincode' : ''">
+                                <div *ngIf="profileForm.get('pincode')?.invalid && profileForm.get('pincode')?.touched" 
+                                     class="text-red-600 text-sm mt-1">
+                                    Please enter a valid pincode
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Country *</label>
+                            <input type="text" formControlName="country" 
+                                   [readonly]="!isFieldEditable('country')"
+                                   [class]="getFieldClass('country') + ' w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'"
+                                   [placeholder]="isFieldEditable('country') ? 'Enter country' : ''">
+                            <div *ngIf="profileForm.get('country')?.invalid && profileForm.get('country')?.touched" 
+                                 class="text-red-600 text-sm mt-1">
+                                Country is required
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div *ngIf="editing" class="flex justify-end space-x-3">
+                    <button type="button" (click)="cancelEditing()"
+                            class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="button" (click)="saveProfile()" [disabled]="saving"
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                        {{ saving ? 'Saving...' : 'Save Changes' }}
+                    </button>
+                </div>
+            </form>
+
+            <!-- Information Notice -->
+            <div *ngIf="!isAdmin()" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex">
+                    <svg class="w-5 h-5 text-blue-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div>
+                        <h4 class="text-sm font-medium text-blue-800">Profile Update Policy</h4>
+                        <p class="text-sm text-blue-700 mt-1">
+                            You can edit basic personal information like name, phone, and address. 
+                            For changes to email, company name, GST/PAN numbers, or other business details, 
+                            please contact your assigned staff member or administrator.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

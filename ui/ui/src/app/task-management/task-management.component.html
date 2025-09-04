@@ -1,0 +1,981 @@
+<div class="min-h-screen bg-gray-50 p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                {{ isClient ? 'My Tasks' : (isStaff ? 'My Assigned Tasks' : 'Task Management') }}
+            </h1>
+            <p class="text-gray-600">
+                {{ isClient ? 'View and track your assigned tasks' : (isStaff ? 'View and manage your assigned tasks' :
+                'Manage and track all tasks across the organization') }}
+            </p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                        <span class="material-icons text-2xl">assignment</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Tasks</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ statistics?.totalTasks || 0 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                        <span class="material-icons text-2xl">pending</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Pending</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ statistics?.pendingTasks || 0 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <span class="material-icons text-2xl">check_circle</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Completed</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ statistics?.completedTasks || 0 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-red-100 text-red-600">
+                        <span class="material-icons text-2xl">warning</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Overdue</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ statistics?.overdueTasks || 0 }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="bg-white rounded-lg shadow mb-6 p-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <!-- Admin buttons -->
+                    <ng-container *ngIf="!isClient && !isStaff">
+                        <button (click)="openAddTaskModal()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                            <span class="material-icons text-base">add</span>
+                            Add New Task
+                        </button>
+                        <button (click)="openStatisticsModal()"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                            <span class="material-icons text-base">analytics</span>
+                            View Statistics
+                        </button>
+                        <button (click)="openWorkloadModal()"
+                            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                            <span class="material-icons text-base">work</span>
+                            Staff Workload
+                        </button>
+                    </ng-container>
+
+                    <!-- Staff buttons -->
+                    <ng-container *ngIf="isStaff">
+                        <button (click)="openStatisticsModal()"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                            <span class="material-icons text-base">analytics</span>
+                            My Task Statistics
+                        </button>
+                    </ng-container>
+
+                    <!-- Client buttons -->
+                    <ng-container *ngIf="isClient">
+                        <button (click)="openStatisticsModal()"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                            <span class="material-icons text-base">analytics</span>
+                            My Task Statistics
+                        </button>
+                    </ng-container>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button (click)="isStaff ? loadStaffTasks() : (isClient ? loadClientTasks() : loadTasks())"
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                        <span class="material-icons text-base">refresh</span>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="bg-white rounded-lg shadow mb-6 p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                <!-- Search -->
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search Tasks</label>
+                    <div class="relative">
+                        <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="searchTasks()"
+                            placeholder="Search by title or description..."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <button (click)="searchTasks()"
+                            class="absolute right-2 top-2 text-gray-400 hover:text-gray-600">
+                            <span class="material-icons text-base">search</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select [(ngModel)]="selectedStatus"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Status</option>
+                        <option *ngFor="let status of statuses" [value]="status.value">{{ status.label }}</option>
+                    </select>
+                </div>
+
+                <!-- Service Category Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Service Category</label>
+                    <select [(ngModel)]="selectedServiceCategory" (change)="onServiceCategoryChange()"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Categories</option>
+                        <option *ngFor="let category of serviceCategories" [value]="category.id">{{ category.name }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Service Subcategory Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Service Subcategory</label>
+                    <select [(ngModel)]="selectedServiceSubcategory" (change)="onServiceSubcategoryChange()"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        [disabled]="!selectedServiceCategory">
+                        <option value="">All Subcategories</option>
+                        <option *ngFor="let subcategory of serviceSubcategories" [value]="subcategory.id">{{
+                            subcategory.name }}</option>
+                    </select>
+                </div>
+
+                <!-- Service Item Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Service Item</label>
+                    <select [(ngModel)]="selectedServiceItem" (change)="onServiceItemChange()"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        [disabled]="!selectedServiceSubcategory">
+                        <option value="">All Service Items</option>
+                        <option *ngFor="let item of serviceItems" [value]="item.id">{{ item.name }}</option>
+                    </select>
+                </div>
+
+                <!-- Priority Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                    <select [(ngModel)]="selectedPriority"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Priorities</option>
+                        <option *ngFor="let priority of priorities" [value]="priority.value">{{ priority.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="flex items-end gap-2">
+                    <button (click)="applyFilters()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        Apply
+                    </button>
+                    <button (click)="clearFilters()"
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="error"
+            class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 flex items-center justify-between">
+            <span>{{ error }}</span>
+            <button (click)="clearError()" class="text-red-700 hover:text-red-900">
+                <span class="material-icons text-base">close</span>
+            </button>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div *ngIf="loading" class="flex justify-center items-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+
+        <!-- Tasks Table -->
+        <div *ngIf="!loading" class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto max-h-[500px] overflow-y-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Task</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Client</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Assigned To</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Priority</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Due Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr *ngFor="let task of tasks" class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ task.title }}</div>
+                                    <div class="text-sm text-gray-500">{{ task.description }}</div>
+                                    <div class="text-xs text-gray-400">{{ task.taskType }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ task.clientName }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ task.assignedStaffName || 'Unassigned' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ getStatusColor(task.status) }}">
+                                    {{ task.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ getPriorityColor(task.priority) }}">
+                                    {{ task.priority }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ task.dueDate | dateFormat:'medium' }}</div>
+                                <div *ngIf="task.deadlineStatus"
+                                    class="text-xs {{ getDeadlineStatusColor(task.deadlineStatus) }} rounded-full px-2 py-1">
+                                    {{ task.deadlineStatus }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center gap-2">
+                                    <!-- Admin actions -->
+                                    <ng-container *ngIf="!isClient && !isStaff">
+                                        <button (click)="viewTaskDetails(task)"
+                                            class="text-blue-600 hover:text-blue-900" title="View Details">
+                                            <span class="material-icons text-base">visibility</span>
+                                        </button>
+                                        <button (click)="openEditTaskModal(task)"
+                                            class="text-green-600 hover:text-green-900" title="Edit">
+                                            <span class="material-icons text-base">edit</span>
+                                        </button>
+                                        <button (click)="openReassignModal(task)"
+                                            class="text-purple-600 hover:text-purple-900" title="Reassign">
+                                            <span class="material-icons text-base">swap_horiz</span>
+                                        </button>
+                                        <button (click)="openSendEmailModal(task)"
+                                            class="text-indigo-600 hover:text-indigo-900" title="Send Email">
+                                            <span class="material-icons text-base">email</span>
+                                        </button>
+                                        <button (click)="openDeleteDialog(task)" class="text-red-600 hover:text-red-900"
+                                            title="Delete">
+                                            <span class="material-icons text-base">delete</span>
+                                        </button>
+                                    </ng-container>
+
+                                    <!-- Staff actions -->
+                                    <ng-container *ngIf="isStaff">
+                                        <button (click)="viewTaskDetails(task)"
+                                            class="text-blue-600 hover:text-blue-900" title="View Details">
+                                            <span class="material-icons text-base">visibility</span>
+                                        </button>
+                                        <button (click)="openEditTaskModal(task)"
+                                            class="text-green-600 hover:text-green-900" title="Update Status">
+                                            <span class="material-icons text-base">edit</span>
+                                        </button>
+                                        <button (click)="openSendEmailModal(task)"
+                                            class="text-indigo-600 hover:text-indigo-900" title="Send Email">
+                                            <span class="material-icons text-base">email</span>
+                                        </button>
+                                    </ng-container>
+
+                                    <!-- Client actions -->
+                                    <ng-container *ngIf="isClient">
+                                        <button (click)="viewTaskDetails(task)"
+                                            class="text-blue-600 hover:text-blue-900" title="View Details">
+                                            <span class="material-icons text-base">visibility</span>
+                                        </button>
+                                        <button (click)="sendMessageToStaff(task)"
+                                            class="text-indigo-600 hover:text-indigo-900" title="Contact Staff">
+                                            <span class="material-icons text-base">email</span>
+                                        </button>
+                                        <!-- <button (click)="openAcknowledgeModal(task)"
+                                            class="text-green-600 hover:text-green-900" title="Acknowledge">
+                                            <span class="material-icons text-base">check_circle</span>
+                                        </button>
+                                        <button (click)="viewTaskTimeline(task)"
+                                            class="text-purple-600 hover:text-purple-900" title="View Timeline">
+                                            <span class="material-icons text-base">timeline</span>
+                                        </button> -->
+                                    </ng-container>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-6">
+            <app-pagination [total]="totalItems" [page]="currentPage + 1" [pageSize]="pageSize"
+                (pageChange)="onPageChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+            </app-pagination>
+        </div>
+    </div>
+
+    <!-- Task Form Modal -->
+    <app-task-form-modal *ngIf="showTaskModal" [task]="selectedTask" (saved)="onTaskSaved($event)"
+        (cancelled)="onTaskModalCancelled()">
+    </app-task-form-modal>
+
+    <!-- Task Detail Modal -->
+    <div *ngIf="showTaskDetailModal && taskDetail"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Task Details</h3>
+                    <button (click)="showTaskDetailModal = false" class="text-gray-400 hover:text-gray-600">
+                        <span class="material-icons text-base">close</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-3">Task Information</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <span class="text-sm font-medium text-gray-500">Title:</span>
+                                <p class="text-sm text-gray-900">{{ taskDetail.title }}</p>
+                            </div>
+                            <div>
+                                <span class="text-sm font-medium text-gray-500">Description:</span>
+                                <p class="text-sm text-gray-900">{{ taskDetail.description }}</p>
+                            </div>
+                            <div>
+                                <span class="text-sm font-medium text-gray-500">Type:</span>
+                                <p class="text-sm text-gray-900">{{ taskDetail.taskType }}</p>
+                            </div>
+                            <div>
+                                <span class="text-sm font-medium text-gray-500">Status:</span>
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ getStatusColor(taskDetail.status) }}">
+                                    {{ taskDetail.status }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-sm font-medium text-gray-500">Priority:</span>
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ getPriorityColor(taskDetail.priority) }}">
+                                    {{ taskDetail.priority }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-sm font-medium text-gray-500">Due Date:</span>
+                                <p class="text-sm text-gray-900">{{ taskDetail.dueDate | dateFormat:'medium' }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-3">Assignment Information</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <span class="text-sm font-medium text-gray-500">Client:</span>
+                                <p class="text-sm text-gray-900">{{ taskDetail.clientName }}</p>
+                                <p class="text-xs text-gray-500">{{ taskDetail.clientPhone }} | {{
+                                    taskDetail.clientEmail }}</p>
+                            </div>
+                            <div>
+                                <span class="text-sm font-medium text-gray-500">Assigned To:</span>
+                                <p class="text-sm text-gray-900">{{ taskDetail.assignedStaffName || 'Unassigned' }}</p>
+                                <p *ngIf="taskDetail.assignedStaffPhone" class="text-xs text-gray-500">
+                                    {{ taskDetail.assignedStaffPhone }} | {{ taskDetail.assignedStaffEmail }}
+                                </p>
+                            </div>
+                            <div>
+                                <span class="text-sm font-medium text-gray-500">Created By:</span>
+                                <p class="text-sm text-gray-900">{{ taskDetail.createdByName }}</p>
+                            </div>
+                            <div *ngIf="taskDetail.updatedByName">
+                                <span class="text-sm font-medium text-gray-500">Updated By:</span>
+                                <p class="text-sm text-gray-900">{{ taskDetail.updatedByName }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t">
+                    <h4 class="font-medium text-gray-900 mb-3">Timeline</h4>
+                    <div class="space-y-2 text-sm">
+                        <div>
+                            <span class="text-gray-500">Assigned:</span>
+                            <span class="text-gray-900">{{ taskDetail.assignedDate | date:'medium' }}</span>
+                        </div>
+                        <div *ngIf="taskDetail.startedDate">
+                            <span class="text-gray-500">Started:</span>
+                            <span class="text-gray-900">{{ taskDetail.startedDate | date:'medium' }}</span>
+                        </div>
+                        <div *ngIf="taskDetail.completedDate">
+                            <span class="text-gray-500">Completed:</span>
+                            <span class="text-gray-900">{{ taskDetail.completedDate | date:'medium' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Task Details Modal -->
+    <div *ngIf="showViewTaskModal && selectedTaskForView"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b">
+                <h2 class="text-xl font-semibold text-gray-800">Task Details</h2>
+                <button (click)="closeViewTaskModal()" class="text-gray-400 hover:text-gray-600">
+                    <span class="material-icons text-2xl">close</span>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Basic Task Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-blue-700 border-b pb-2">Task Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Title:</span> {{ selectedTaskForView.title }}</div>
+                            <div><span class="font-semibold">Description:</span> {{ selectedTaskForView.description }}
+                            </div>
+                            <div><span class="font-semibold">Status:</span>
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ getStatusColor(selectedTaskForView.status) }}">
+                                    {{ selectedTaskForView.status }}
+                                </span>
+                            </div>
+                            <div><span class="font-semibold">Priority:</span>
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ getPriorityColor(selectedTaskForView.priority) }}">
+                                    {{ selectedTaskForView.priority }}
+                                </span>
+                            </div>
+                            <div><span class="font-semibold">Due Date:</span> {{ selectedTaskForView.dueDate |
+                                dateFormat:'medium' }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Service Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-green-700 border-b pb-2">Service Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Service Category:</span> {{
+                                selectedTaskForView.serviceCategoryName || 'Not specified' }}</div>
+                            <div><span class="font-semibold">Service Subcategory:</span> {{
+                                selectedTaskForView.serviceSubcategoryName || 'Not specified' }}</div>
+                            <div><span class="font-semibold">Service Item:</span> {{ selectedTaskForView.serviceItemName
+                                || 'Not specified' }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Assignment Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-red-700 border-b pb-2">Assignment Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Client:</span> {{ selectedTaskForView.clientName }}</div>
+                            <div><span class="font-semibold">Client ID:</span> {{ selectedTaskForView.clientId }}</div>
+                            <div><span class="font-semibold">Assigned To:</span> {{
+                                selectedTaskForView.assignedStaffName || 'Unassigned' }}</div>
+                            <div *ngIf="selectedTaskForView.assignedStaffEmployeeId"><span
+                                    class="font-semibold">Employee
+                                    ID:</span> {{ selectedTaskForView.assignedStaffEmployeeId }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-green-700 border-b pb-2">Timeline</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Assigned Date:</span> {{ selectedTaskForView.assignedDate |
+                                dateFormat:'medium' }}</div>
+                            <div *ngIf="selectedTaskForView.startedDate"><span class="font-semibold">Started
+                                    Date:</span> {{ selectedTaskForView.startedDate | dateFormat:'medium' }}</div>
+                            <div *ngIf="selectedTaskForView.completedDate"><span class="font-semibold">Completed
+                                    Date:</span> {{ selectedTaskForView.completedDate | dateFormat:'medium' }}</div>
+                            <div><span class="font-semibold">Created At:</span> {{ selectedTaskForView.createdAt |
+                                dateFormat:'medium' }}</div>
+                            <div><span class="font-semibold">Last Updated:</span> {{ selectedTaskForView.updatedAt |
+                                dateFormat:'medium' }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Time Tracking -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-purple-700 border-b pb-2">Time Tracking</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Estimated Hours:</span> {{
+                                selectedTaskForView.estimatedHours || 'Not set' }}</div>
+                            <div><span class="font-semibold">Actual Hours:</span> {{ selectedTaskForView.actualHours ||
+                                'Not tracked' }}</div>
+                            <div *ngIf="selectedTaskForView.estimatedHours && selectedTaskForView.actualHours">
+                                <span class="font-semibold">Variance:</span>
+                                <span [ngClass]="{
+                                    'text-green-600': (selectedTaskForView.actualHours - selectedTaskForView.estimatedHours) <= 0,
+                                    'text-red-600': (selectedTaskForView.actualHours - selectedTaskForView.estimatedHours) > 0
+                                }">
+                                    {{ (selectedTaskForView.actualHours - selectedTaskForView.estimatedHours).toFixed(1)
+                                    }} hours
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Audit Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-gray-700 border-b pb-2">Audit Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Created By:</span> {{ selectedTaskForView.createdByName ||
+                                'N/A' }}</div>
+                            <div><span class="font-semibold">Created At:</span> {{ selectedTaskForView.createdAt |
+                                dateFormat:'medium' }}</div>
+                            <div><span class="font-semibold">Updated By:</span> {{ selectedTaskForView.updatedByName ||
+                                'N/A' }}</div>
+                            <div><span class="font-semibold">Last Updated:</span> {{ selectedTaskForView.updatedAt |
+                                dateFormat:'medium' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-4 mt-8 pt-6 border-t">
+                    <button (click)="closeViewTaskModal()"
+                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        Close
+                    </button>
+                    <!-- <button (click)="openEditTaskModal(selectedTaskForView)"
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Edit Task
+                    </button> -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reassign Modal -->
+    <div *ngIf="showReassignModal && selectedTask"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b">
+                <h2 class="text-xl font-semibold text-gray-800">Reassign Task</h2>
+                <button (click)="showReassignModal = false" class="text-gray-400 hover:text-gray-600">
+                    <span class="material-icons text-2xl">close</span>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Task</label>
+                    <div class="text-gray-900 font-medium">{{ selectedTask.title }}</div>
+                    <div class="text-sm text-gray-500">{{ selectedTask.description }}</div>
+                    <div class="text-xs text-gray-400 mt-1">
+                        Currently assigned to: {{ selectedTask.assignedStaffName || 'Unassigned' }}
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">New Staff Member *</label>
+                    <select [(ngModel)]="newStaffId"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select Staff Member</option>
+                        <option *ngFor="let staff of availableStaff" [value]="staff.staffId">
+                            {{ staff.staffName }} - {{ staff.position }} ({{ staff.employeeId }})
+                        </option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Select the staff member to reassign this task to</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-4">
+                    <button (click)="showReassignModal = false"
+                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button (click)="reassignTask()" [disabled]="!newStaffId"
+                        class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Reassign Task
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Modal -->
+    <div *ngIf="showStatisticsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Task Statistics</h3>
+                    <button (click)="showStatisticsModal = false" class="text-gray-400 hover:text-gray-600">
+                        <span class="material-icons text-base">close</span>
+                    </button>
+                </div>
+
+                <div *ngIf="statistics" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-blue-600">{{ statistics.totalTasks }}</div>
+                        <div class="text-sm text-blue-600">Total Tasks</div>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-yellow-600">{{ statistics.pendingTasks }}</div>
+                        <div class="text-sm text-yellow-600">Pending</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-blue-600">{{ statistics.inProgressTasks }}</div>
+                        <div class="text-sm text-blue-600">In Progress</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-green-600">{{ statistics.completedTasks }}</div>
+                        <div class="text-sm text-green-600">Completed</div>
+                    </div>
+                    <div class="bg-orange-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-orange-600">{{ statistics.onHoldTasks }}</div>
+                        <div class="text-sm text-orange-600">On Hold</div>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-red-600">{{ statistics.cancelledTasks }}</div>
+                        <div class="text-sm text-red-600">Cancelled</div>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-red-600">{{ statistics.overdueTasks }}</div>
+                        <div class="text-sm text-red-600">Overdue</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workload Modal -->
+    <div *ngIf="showWorkloadModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Staff Workload Summary</h3>
+                    <button (click)="showWorkloadModal = false" class="text-gray-400 hover:text-gray-600">
+                        <span class="material-icons text-base">close</span>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Staff Member</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Position</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Department</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Total Tasks</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Pending</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    In Progress</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Completed</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Overdue</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr *ngFor="let staff of workloadData" class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ staff.staffName }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ staff.position }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ staff.department }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ staff.totalTasks }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ staff.pendingTasks }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ staff.inProgressTasks }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ staff.completedTasks }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ staff.overdueTasks }}</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Dialog -->
+    <app-confirm-dialog *ngIf="showDeleteDialog && taskToDelete" [title]="'Delete Task'"
+        [message]="'Are you sure you want to delete this task? This action cannot be undone.'" (confirm)="deleteTask()"
+        (cancel)="cancelDelete()">
+    </app-confirm-dialog>
+
+    <!-- Send Email Modal -->
+    <div *ngIf="showSendEmailModal && selectedTaskForEmail"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full border-4 border-indigo-100">
+            <!-- Header -->
+            <div
+                class="flex items-center justify-between p-6 border-b bg-gradient-to-r from-blue-500 to-blue-900 rounded-t-xl">
+                <h2 class="text-xl font-semibold text-white">Send Email</h2>
+                <button (click)="closeSendEmailModal()" class="text-white hover:text-indigo-200 transition-colors">
+                    <span class="material-icons text-2xl">close</span>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 bg-gradient-to-b from-gray-50 to-white">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Task Information</label>
+                    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                        <div class="text-blue-900 font-semibold text-lg">{{ selectedTaskForEmail.title }}</div>
+                        <div class="text-blue-700 text-sm mt-1">{{ selectedTaskForEmail.description }}</div>
+                        <div class="text-blue-600 text-xs mt-2">{{ selectedTaskForEmail.taskType }}</div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Choose Recipient</label>
+                    <div class="space-y-4">
+                        <!-- Client Option - Available for Admin and Staff -->
+                        <div *ngIf="!isClient"
+                            class="border-2 border-blue-200 rounded-lg p-4 hover:bg-blue-50 hover:border-blue-400 cursor-pointer transition-all duration-200 transform hover:scale-105 shadow-sm"
+                            (click)="sendEmailToClient()">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <span class="material-icons text-blue-600 text-xl">person</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-gray-900">Client</div>
+                                        <div class="text-sm text-blue-600 font-medium">{{
+                                            selectedTaskForEmail.clientName }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-blue-500">
+                                    <span class="material-icons">arrow_forward</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Admin Option - Available for Staff only -->
+                        <div *ngIf="isStaff && selectedTaskForEmail.createdByEmail"
+                            class="border-2 border-purple-200 rounded-lg p-4 hover:bg-purple-50 hover:border-purple-400 cursor-pointer transition-all duration-200 transform hover:scale-105 shadow-sm"
+                            (click)="sendEmailToAdmin()">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <span class="material-icons text-purple-600 text-xl">admin_panel_settings</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-gray-900">Task Creator (Admin)</div>
+                                        <div class="text-sm text-purple-600 font-medium">{{
+                                            selectedTaskForEmail.createdByName }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-purple-500">
+                                    <span class="material-icons">arrow_forward</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Staff Option - Only for Admin, and only if staff is not the current user -->
+                        <div *ngIf="!isClient && !isStaff && selectedTaskForEmail.assignedStaffName"
+                            class="border-2 border-green-200 rounded-lg p-4 hover:bg-green-50 hover:border-green-400 cursor-pointer transition-all duration-200 transform hover:scale-105 shadow-sm"
+                            (click)="sendEmailToStaff()">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                        <span class="material-icons text-green-600 text-xl">work</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-gray-900">Assigned Staff</div>
+                                        <div class="text-sm text-green-600 font-medium">{{
+                                            selectedTaskForEmail.assignedStaffName }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-green-500">
+                                    <span class="material-icons">arrow_forward</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Staff Option for Staff - Only show if staff is assigned and it's not the current user -->
+                        <div *ngIf="isStaff && selectedTaskForEmail.assignedStaffName && selectedTaskForEmail.assignedStaffName !== (currentUser?.firstName + ' ' + currentUser?.lastName)"
+                            class="border-2 border-green-200 rounded-lg p-4 hover:bg-green-50 hover:border-green-400 cursor-pointer transition-all duration-200 transform hover:scale-105 shadow-sm"
+                            (click)="sendEmailToStaff()">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                        <span class="material-icons text-green-600 text-xl">work</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-gray-900">Other Assigned Staff</div>
+                                        <div class="text-sm text-green-600 font-medium">{{
+                                            selectedTaskForEmail.assignedStaffName }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-green-500">
+                                    <span class="material-icons">arrow_forward</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Client Option for Client - Only show staff -->
+                        <div *ngIf="isClient && selectedTaskForEmail.assignedStaffName"
+                            class="border-2 border-green-200 rounded-lg p-4 hover:bg-green-50 hover:border-green-400 cursor-pointer transition-all duration-200 transform hover:scale-105 shadow-sm"
+                            (click)="sendEmailToStaff()">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                        <span class="material-icons text-green-600 text-xl">work</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-gray-900">Assigned Staff</div>
+                                        <div class="text-sm text-green-600 font-medium">{{
+                                            selectedTaskForEmail.assignedStaffName }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-green-500">
+                                    <span class="material-icons">arrow_forward</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Staff Assigned Message -->
+                        <div *ngIf="!selectedTaskForEmail.assignedStaffName"
+                            class="border-2 border-gray-200 rounded-lg p-4 bg-gray-50 opacity-75">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                        <span class="material-icons text-gray-400 text-xl">work_off</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-500">Assigned Staff</div>
+                                        <div class="text-sm text-gray-400">No staff assigned to this task</div>
+                                    </div>
+                                </div>
+                                <div class="text-gray-400">
+                                    <span class="material-icons">block</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-4 pt-4 border-t border-gray-200">
+                    <button (click)="closeSendEmailModal()"
+                        class="px-6 py-2 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acknowledge Task Modal -->
+    <div *ngIf="showAcknowledgeModal && selectedTaskForAcknowledge"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full border-4 border-green-100">
+            <!-- Header -->
+            <div
+                class="flex items-center justify-between p-6 border-b bg-gradient-to-r from-green-500 to-green-900 rounded-t-xl">
+                <h2 class="text-xl font-semibold text-white">Acknowledge Task</h2>
+                <button (click)="closeAcknowledgeModal()" class="text-white hover:text-green-200 transition-colors">
+                    <span class="material-icons text-2xl">close</span>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 bg-gradient-to-b from-gray-50 to-white">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Task Information</label>
+                    <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+                        <div class="text-green-900 font-semibold text-lg">{{ selectedTaskForAcknowledge.title }}</div>
+                        <div class="text-green-700 text-sm mt-1">{{ selectedTaskForAcknowledge.description }}</div>
+                        <div class="text-green-600 text-xs mt-2">{{ selectedTaskForAcknowledge.taskType }}</div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label for="acknowledgeMessage" class="block text-sm font-medium text-gray-700 mb-3">
+                        Your Message (Optional)
+                    </label>
+                    <textarea id="acknowledgeMessage" [(ngModel)]="acknowledgeMessage" rows="4"
+                        placeholder="e.g., 'We will upload the required documents by tomorrow' or 'I acknowledge this task and will provide the necessary information'"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none">
+                    </textarea>
+                    <p class="text-xs text-gray-500 mt-2">
+                        This message will be sent to the assigned staff member to acknowledge the task.
+                    </p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-4 pt-4 border-t border-gray-200">
+                    <button (click)="closeAcknowledgeModal()"
+                        class="px-6 py-2 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium">
+                        Cancel
+                    </button>
+                    <button (click)="acknowledgeTask()"
+                        class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 font-medium flex items-center gap-2">
+                        <span class="material-icons text-base">check_circle</span>
+                        Send Acknowledgment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

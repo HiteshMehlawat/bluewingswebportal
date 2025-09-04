@@ -1,0 +1,110 @@
+<div class="service-selection-container">
+    <!-- Error Display -->
+    <div *ngIf="error" class="error-message">
+        <span class="material-icons text-red-500">error</span>
+        {{ error }}
+    </div>
+
+    <!-- Loading Indicator -->
+    <div *ngIf="loading" class="loading-indicator">
+        <span class="material-icons animate-spin">refresh</span>
+        Loading services...
+    </div>
+
+    <!-- Service Selection Form -->
+    <div class="service-selection-form" *ngIf="!loading">
+        <!-- Category Selection -->
+        <div class="form-group">
+            <label for="category-select" class="form-label">
+                Service Category
+                <span *ngIf="required" class="text-red-500">*</span>
+            </label>
+            <select id="category-select" class="form-select" [class.border-red-500]="required && !selectedCategoryId"
+                [disabled]="disabled" (change)="onCategoryChangeEvent($event)">
+                <option value="">Select a category</option>
+                <option *ngFor="let category of categories" [value]="category.id"
+                    [selected]="selectedCategoryId === category.id">
+                    {{ category.name }}
+                </option>
+            </select>
+        </div>
+
+        <!-- Subcategory Selection -->
+        <div class="form-group" *ngIf="selectedCategoryId && subcategories.length > 0">
+            <label for="subcategory-select" class="form-label">
+                Service Type
+                <span *ngIf="required" class="text-red-500">*</span>
+            </label>
+            <select id="subcategory-select" class="form-select"
+                [class.border-red-500]="required && !selectedSubcategoryId" [disabled]="disabled"
+                (change)="onSubcategoryChangeEvent($event)">
+                <option value="">Select a service type</option>
+                <option *ngFor="let subcategory of subcategories" [value]="subcategory.id"
+                    [selected]="selectedSubcategoryId === subcategory.id">
+                    {{ subcategory.name }}
+                </option>
+            </select>
+        </div>
+
+        <!-- Service Item Selection -->
+        <div class="form-group" *ngIf="selectedSubcategoryId && serviceItems.length > 0">
+            <label for="service-item-select" class="form-label">
+                Specific Service
+                <span *ngIf="required" class="text-red-500">*</span>
+            </label>
+            <select id="service-item-select" class="form-select"
+                [class.border-red-500]="required && !selectedServiceItemId" [disabled]="disabled"
+                (change)="onServiceItemChangeEvent($event)">
+                <option value="">Select a specific service</option>
+                <option *ngFor="let item of serviceItems" [value]="item.id"
+                    [selected]="selectedServiceItemId === item.id">
+                    {{ item.name }}
+                    <span *ngIf="showEstimatedHours && item.estimatedHours > 0">
+                        ({{ item.estimatedHours }} hrs)
+                    </span>
+                </option>
+            </select>
+        </div>
+
+        <!-- Selected Service Display -->
+        <div *ngIf="selectedServiceItem && showServiceDescription" class="selected-service-display">
+            <div class="selected-service-card">
+                <div class="selected-service-header">
+                    <span class="material-icons text-blue-500">check_circle</span>
+                    <h4 class="selected-service-title">{{ selectedServiceItem?.name }}</h4>
+                </div>
+
+                <div class="selected-service-details">
+                    <div class="service-path">
+                        <span class="text-gray-600">{{ selectedServiceItem?.categoryName }}</span>
+                        <span class="material-icons text-gray-400">chevron_right</span>
+                        <span class="text-gray-600">{{ selectedServiceItem?.subcategoryName }}</span>
+                    </div>
+
+                    <div *ngIf="selectedServiceItem?.description" class="service-description">
+                        {{ selectedServiceItem?.description }}
+                    </div>
+
+                    <div *ngIf="showEstimatedHours && selectedServiceItem && selectedServiceItem.estimatedHours > 0"
+                        class="service-hours">
+                        <span class="material-icons text-orange-500">schedule</span>
+                        <span class="text-sm text-gray-600">
+                            Estimated: {{ selectedServiceItem ? selectedServiceItem.estimatedHours : 0 }} hour(s)
+                        </span>
+                    </div>
+                </div>
+
+                <button type="button" class="clear-selection-btn" [disabled]="disabled" (click)="clearSelection()">
+                    <span class="material-icons">clear</span>
+                    Clear Selection
+                </button>
+            </div>
+        </div>
+
+        <!-- No Services Available -->
+        <div *ngIf="selectedSubcategoryId && serviceItems.length === 0 && !loading" class="no-services">
+            <span class="material-icons text-gray-400">info</span>
+            <p class="text-gray-500">No services available in this category.</p>
+        </div>
+    </div>
+</div>

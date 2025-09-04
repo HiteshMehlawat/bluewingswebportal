@@ -1,0 +1,79 @@
+/* Custom styles for staff management component */
+:host {
+  display: block;
+}
+
+.input {
+  @apply px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50;
+}
+
+/* Modal content */
+.modal-content {
+  @apply bg-white rounded-xl shadow-lg p-8 w-full max-w-lg;
+}
+
+/* Performance stats cards */
+.performance-card {
+  @apply rounded-lg p-4 text-center;
+}
+
+.performance-card.blue {
+  @apply bg-blue-50;
+}
+
+.performance-card.green {
+  @apply bg-green-50;
+}
+
+.performance-card.yellow {
+  @apply bg-yellow-50;
+}
+
+.performance-card.red {
+  @apply bg-red-50;
+}
+
+.performance-number {
+  @apply text-2xl font-bold;
+}
+
+.performance-label {
+  @apply text-sm;
+}
+
+.performance-card.blue .performance-number {
+  @apply text-blue-700;
+}
+
+.performance-card.blue .performance-label {
+  @apply text-blue-600;
+}
+
+.performance-card.green .performance-number {
+  @apply text-green-700;
+}
+
+.performance-card.green .performance-label {
+  @apply text-green-600;
+}
+
+.performance-card.yellow .performance-number {
+  @apply text-yellow-700;
+}
+
+.performance-card.yellow .performance-label {
+  @apply text-yellow-600;
+}
+
+.performance-card.red .performance-number {
+  @apply text-red-700;
+}
+
+.performance-card.red .performance-label {
+  @apply text-red-600;
+} 

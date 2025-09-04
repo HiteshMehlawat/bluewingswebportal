@@ -1,0 +1,27 @@
+<div *ngIf="total > 0" class="flex flex-col sm:flex-row justify-between items-center mt-2 gap-1 text-xs">
+    <div class="flex items-center gap-1">
+        <label class="text-xs">Rows:</label>
+        <select class="border rounded px-1 py-0.5 text-xs h-6" [value]="currentPageSize"
+            (change)="onPageSizeChangeEvent($event)">
+            <option *ngFor="let size of pageSizeOptions" [value]="size">
+                {{ size }}
+            </option>
+        </select>
+    </div>
+    <div class="text-xs text-gray-600">{{ getSummary() }}</div>
+    <div class="flex items-center gap-0.5">
+        <button class="px-1 py-0.5 rounded bg-gray-200 text-xs h-6" [disabled]="page === 1 || page === 0"
+            [class.cursor-not-allowed]="page === 1 || page === 0" [class.opacity-60]="page === 1 || page === 0"
+            (click)="page > 1 && goToPage(page - 1)">
+            Prev
+        </button>
+        <input type="number" min="1" [max]="totalPages" [value]="page" (change)="onPageInputChange($event)"
+            class="w-8 text-center border rounded text-xs h-6" />
+        <span class="mx-0.5">/ {{ totalPages }}</span>
+        <button class="px-1 py-0.5 rounded bg-gray-200 text-xs h-6" [disabled]="page === totalPages || page === 0"
+            [class.cursor-not-allowed]="page === totalPages || page === 0"
+            [class.opacity-60]="page === totalPages || page === 0" (click)="page < totalPages && goToPage(page + 1)">
+            Next
+        </button>
+    </div>
+</div>

@@ -1,0 +1,353 @@
+<div class="flex min-h-screen bg-gray-100 font-sans">
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col">
+
+        <!-- Dashboard Content -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            <div *ngIf="loading" class="flex justify-center items-center h-64">
+                <span class="text-lg text-gray-500">Loading...</span>
+            </div>
+            <div *ngIf="error" class="flex justify-center items-center h-64">
+                <span class="text-lg text-red-500">{{ error }}</span>
+            </div>
+            <ng-container *ngIf="!loading && !error">
+                <!-- Stat Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow p-6 flex items-center gap-4">
+                        <span class="material-icons text-3xl text-blue-500">people</span>
+                        <div>
+                            <div class="text-xs text-gray-500">Total Clients</div>
+                            <div class="text-xl font-bold">{{ totalClients }}</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6 flex items-center gap-4">
+                        <span class="material-icons text-3xl text-cyan-500">supervisor_account</span>
+                        <div>
+                            <div class="text-xs text-gray-500">Total Staff</div>
+                            <div class="text-xl font-bold">{{ totalStaff }}</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6 flex items-center gap-4">
+                        <span class="material-icons text-3xl text-indigo-500">folder_open</span>
+                        <div>
+                            <div class="text-xs text-gray-500">Active Cases</div>
+                            <div class="text-xl font-bold">{{ activeCases }}</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6 flex items-center gap-4">
+                        <span class="material-icons text-3xl text-yellow-500">hourglass_empty</span>
+                        <div>
+                            <div class="text-xs text-gray-500">Pending Tasks</div>
+                            <div class="text-xl font-bold">{{ pendingTasks }}</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6 flex items-center gap-4">
+                        <span class="material-icons text-3xl text-green-500">check_circle</span>
+                        <div>
+                            <div class="text-xs text-gray-500">Completed Tasks</div>
+                            <div class="text-xl font-bold">{{ completedFilings }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Staff Performance Summary (Paginated) -->
+                <div class="bg-white rounded-xl shadow p-6 mb-8">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2"><span
+                            class="material-icons text-blue-500">groups</span> Staff Performance Summary</h2>
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-gray-50 rounded-lg p-4 flex flex-col items-center shadow-sm">
+                            <div class="text-xs text-gray-500 mb-1">Total Tasks Assigned</div>
+                            <div class="text-2xl font-bold text-blue-700">{{ staffPerfTotalAssigned }}</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4 flex flex-col items-center shadow-sm">
+                            <div class="text-xs text-gray-500 mb-1">Total Tasks Completed</div>
+                            <div class="text-2xl font-bold text-green-700">{{ staffPerfTotalCompleted }}</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4 flex flex-col items-center shadow-sm">
+                            <div class="text-xs text-gray-500 mb-1">Total Tasks Pending</div>
+                            <div class="text-2xl font-bold text-yellow-700">{{ staffPerfTotalPending }}</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4 flex flex-col items-center shadow-sm">
+                            <div class="text-xs text-gray-500 mb-1">Total Tasks Overdue</div>
+                            <div class="text-2xl font-bold text-red-700">{{ staffPerfTotalOverdue }}</div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-[400px] overflow-y-auto">
+                        <table class="min-w-full text-sm text-left border-collapse">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 font-semibold">Employee ID</th>
+                                    <th class="px-4 py-2 font-semibold">Name</th>
+                                    <th class="px-4 py-2 font-semibold">Position</th>
+                                    <th class="px-4 py-2 font-semibold">Department</th>
+                                    <!-- <th class="px-4 py-2 font-semibold">Supervisor ID</th> -->
+                                    <th class="px-4 py-2 font-semibold">Assigned</th>
+                                    <th class="px-4 py-2 font-semibold">Completed</th>
+                                    <th class="px-4 py-2 font-semibold">Pending</th>
+                                    <th class="px-4 py-2 font-semibold">Overdue</th>
+                                    <th class="px-4 py-2 font-semibold">Last Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let s of staffPerformanceSummary" class="even:bg-gray-50 hover:bg-blue-50">
+                                    <td class="px-4 py-2">{{ s.employeeId }}</td>
+                                    <td class="px-4 py-2">{{ s.name }}</td>
+                                    <td class="px-4 py-2">{{ s.position }}</td>
+                                    <td class="px-4 py-2">{{ s.department }}</td>
+                                    <!-- <td class="px-4 py-2">{{ s.supervisorId }}</td> -->
+                                    <td class="px-4 py-2">{{ s.totalAssigned }}</td>
+                                    <td class="px-4 py-2 text-green-600 font-bold">{{ s.completed }}</td>
+                                    <td class="px-4 py-2 text-yellow-600 font-bold">{{ s.pending }}</td>
+                                    <td class="px-4 py-2 text-red-600 font-bold">{{ s.overdue }}</td>
+                                    <td class="px-4 py-2">{{ s.lastActivity ? (s.lastActivity | date:'short') : '-' }}
+                                    </td>
+                                </tr>
+                                <tr *ngIf="staffPerformanceSummary.length === 0">
+                                    <td class="px-4 py-2 text-center text-gray-400" colspan="10">No records found</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <app-pagination *ngIf="staffPerformanceSummaryTotal > 0" [page]="staffPerformanceSummaryPage"
+                        [pageSize]="staffPerformanceSummaryPageSize" [total]="staffPerformanceSummaryTotal"
+                        [pageSizeOptions]="staffPerformanceSummaryPageSizeOptions"
+                        (pageChange)="setStaffPerformanceSummaryPage($event)"
+                        (pageSizeChange)="onStaffPerformanceSummaryPageSizeChange($event)">
+                    </app-pagination>
+                </div>
+
+                <!-- Latest Document Uploads -->
+                <div class="bg-white rounded-xl shadow p-6 mb-8">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2"><span
+                            class="material-icons text-indigo-500">attach_file</span> Latest Document Uploads</h2>
+                    <div *ngIf="loadingLatestUploads" class="flex justify-center items-center h-32">
+                        <span class="text-lg text-gray-500">Loading...</span>
+                    </div>
+                    <div class=" max-h-[400px] max-w-[1150px] overflow-y-auto" *ngIf="!loadingLatestUploads">
+                        <table class="min-w-full text-sm text-left border-collapse overflow-x-auto">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 font-semibold">Document ID</th>
+                                    <th class="px-4 py-2 font-semibold">Document Name</th>
+                                    <th class="px-4 py-2 font-semibold">Uploaded By</th>
+                                    <th class="px-4 py-2 font-semibold">Upload Date/Time</th>
+                                    <th class="px-4 py-2 font-semibold">Client Name</th>
+                                    <th class="px-4 py-2 font-semibold">Client ID</th>
+                                    <th class="px-4 py-2 font-semibold">Document Type</th>
+                                    <th class="px-4 py-2 font-semibold">File Size</th>
+                                    <th class="px-4 py-2 font-semibold">File Type</th>
+                                    <th class="px-4 py-2 font-semibold">Status</th>
+                                    <th class="px-4 py-2 font-semibold">Verified By</th>
+                                    <th class="px-4 py-2 font-semibold">Rejected By</th>
+                                    <th class="px-4 py-2 font-semibold">Download/View</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let doc of latestUploads" class="even:bg-gray-50 hover:bg-indigo-50">
+                                    <td class="px-4 py-2">{{ doc.documentId }}</td>
+                                    <td class="px-4 py-2">{{ doc.documentName }}</td>
+                                    <td class="px-4 py-2">{{ doc.uploadedByName }} <span
+                                            class="text-xs text-gray-400">({{ doc.uploadedByRole }})</span></td>
+                                    <td class="px-4 py-2">{{ doc.uploadDateTime | date:'short' }}</td>
+                                    <td class="px-4 py-2">{{ doc.clientName }}</td>
+                                    <td class="px-4 py-2">{{ doc.clientId }}</td>
+                                    <td class="px-4 py-2">{{ doc.documentType }}</td>
+                                    <td class="px-4 py-2">{{ doc.fileSize | fileSize }}</td>
+                                    <td class="px-4 py-2">{{ doc.fileType }}</td>
+                                    <td class="px-4 py-2">
+                                        <span *ngIf="doc.status === 'VERIFIED'"
+                                            class="text-green-600 font-bold">Reviewed</span>
+                                        <span *ngIf="doc.status === 'PENDING'"
+                                            class="text-yellow-600 font-bold">Pending</span>
+                                        <span *ngIf="doc.status === 'REJECTED'"
+                                            class="text-red-600 font-bold">Rejected</span>
+                                    </td>
+                                    <td class="px-4 py-2">{{ doc.verifiedByName || '-' }}</td>
+                                    <td class="px-4 py-2">
+                                        <div *ngIf="doc.rejectedByName" class="cursor-help"
+                                            [title]="doc.rejectionReason || 'No reason provided'">
+                                            <span class="text-red-600 font-medium">{{ doc.rejectedByName }}</span>
+                                            <div *ngIf="doc.rejectionReason" class="text-xs text-gray-500 mt-1">
+                                                {{ doc.rejectionReason }}
+                                            </div>
+                                        </div>
+                                        <span *ngIf="!doc.rejectedByName" class="text-gray-400">-</span>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button (click)="downloadDocument(doc.documentId)"
+                                            class="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1">
+                                            <span class="material-icons text-sm">download</span>
+                                            Download
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="latestUploads.length === 0">
+                                    <td class="px-4 py-2 text-center text-gray-400" colspan="13">No records found</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination Bar for Latest Uploads -->
+                    <app-pagination *ngIf="latestUploadsTotal > 0" [page]="latestUploadsPage"
+                        [pageSize]="latestUploadsPageSize" [total]="latestUploadsTotal"
+                        [pageSizeOptions]="latestUploadsPageSizeOptions" (pageChange)="setLatestUploadsPage($event)"
+                        (pageSizeChange)="onLatestUploadsPageSizeChange($event)">
+                    </app-pagination>
+                </div>
+
+                <!-- Upcoming Deadlines -->
+                <div class="bg-white rounded-xl shadow p-6 mb-8">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2"><span
+                            class="material-icons text-pink-500">event</span> Upcoming Deadlines</h2>
+                    <div *ngIf="loadingUpcomingDeadlines" class="flex justify-center items-center h-32">
+                        <span class="text-lg text-gray-500">Loading...</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-[400px] overflow-y-auto" *ngIf="!loadingUpcomingDeadlines">
+                        <table class="min-w-full text-sm text-left border-collapse">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 font-semibold">Task Name</th>
+                                    <th class="px-4 py-2 font-semibold">Description</th>
+                                    <th class="px-4 py-2 font-semibold">Due Date</th>
+                                    <th class="px-4 py-2 font-semibold">Status</th>
+                                    <th class="px-4 py-2 font-semibold">Priority</th>
+                                    <th class="px-4 py-2 font-semibold">Assigned Staff</th>
+                                    <th class="px-4 py-2 font-semibold">Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let d of upcomingDeadlines" class="even:bg-gray-50 hover:bg-pink-50">
+                                    <td class="px-4 py-2 flex items-center gap-2">
+                                        <span [ngClass]="{
+                                            'bg-red-100 text-red-600': d.deadlineStatus === 'Overdue',
+                                            'bg-yellow-100 text-yellow-700': d.deadlineStatus === 'Due Soon',
+                                            'bg-green-100 text-green-700': d.deadlineStatus === 'Safe'
+                                        }" class="rounded-full px-2 py-0.5 text-xs font-bold">
+                                            {{ d.deadlineStatus }}
+                                        </span>
+                                        <span class="ml-2 font-semibold">{{ d.taskName }}</span>
+                                    </td>
+                                    <td class="px-4 py-2">{{ d.description || '-' }}</td>
+                                    <td class="px-4 py-2">{{ d.dueDate | date:'mediumDate' }}</td>
+                                    <td class="px-4 py-2">
+                                        <span [ngClass]="{
+                                            'text-red-600 font-bold': d.status === 'OVERDUE',
+                                            'text-yellow-600 font-bold': d.status === 'PENDING',
+                                            'text-green-600 font-bold': d.status === 'COMPLETED' || d.status === 'SUBMITTED'
+                                        }">{{ d.status }}</span>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <span [ngClass]="{
+                                            'bg-red-200 text-red-800': d.priority === 'URGENT' || d.priority === 'HIGH',
+                                            'bg-yellow-200 text-yellow-800': d.priority === 'MEDIUM',
+                                            'bg-green-200 text-green-800': d.priority === 'LOW'
+                                        }" class="rounded px-2 py-0.5 text-xs font-bold">
+                                            {{ d.priority }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-2">{{ d.staffName || '-' }}</td>
+                                    <td class="px-4 py-2">{{ d.taskType }}</td>
+                                </tr>
+                                <tr *ngIf="upcomingDeadlines.length === 0">
+                                    <td class="px-4 py-2 text-center text-gray-400" colspan="7">No records found</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination Bar for Upcoming Deadlines -->
+                    <app-pagination *ngIf="upcomingDeadlinesTotal > 0" [page]="upcomingDeadlinesPage"
+                        [pageSize]="upcomingDeadlinesPageSize" [total]="upcomingDeadlinesTotal"
+                        [pageSizeOptions]="upcomingDeadlinesPageSizeOptions"
+                        (pageChange)="setUpcomingDeadlinesPage($event)"
+                        (pageSizeChange)="onUpcomingDeadlinesPageSizeChange($event)">
+                    </app-pagination>
+                </div>
+
+                <!-- Lead Statistics -->
+                <div class="bg-white rounded-xl shadow p-6 mb-8">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                        <span class="material-icons text-green-500">trending_up</span> Lead Statistics
+                    </h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div class="bg-blue-50 rounded-lg p-4 flex flex-col items-center shadow-sm">
+                            <div class="text-xs text-gray-500 mb-1">Total Leads</div>
+                            <div class="text-2xl font-bold text-blue-700">{{ leadStatistics.NEW || 0 +
+                                leadStatistics.CONTACTED || 0 + leadStatistics.QUALIFIED || 0 + leadStatistics.CONVERTED
+                                || 0 + leadStatistics.LOST || 0 }}</div>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-4 flex flex-col items-center shadow-sm">
+                            <div class="text-xs text-gray-500 mb-1">Converted</div>
+                            <div class="text-2xl font-bold text-green-700">{{ leadStatistics.CONVERTED || 0 }}</div>
+                        </div>
+                        <div class="bg-yellow-50 rounded-lg p-4 flex flex-col items-center shadow-sm">
+                            <div class="text-xs text-gray-500 mb-1">In Progress</div>
+                            <div class="text-2xl font-bold text-yellow-700">{{ leadStatistics.NEW || 0 +
+                                leadStatistics.CONTACTED || 0 + leadStatistics.QUALIFIED || 0 }}</div>
+                        </div>
+                        <div class="bg-red-50 rounded-lg p-4 flex flex-col items-center shadow-sm">
+                            <div class="text-xs text-gray-500 mb-1">Lost</div>
+                            <div class="text-2xl font-bold text-red-700">{{ leadStatistics.LOST || 0 }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Leads -->
+                <div class="bg-white rounded-xl shadow p-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                        <span class="material-icons text-blue-500">person_add</span> Recent Leads
+                    </h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm text-left border-collapse">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 font-semibold">Lead ID</th>
+                                    <th class="px-4 py-2 font-semibold">Name</th>
+                                    <th class="px-4 py-2 font-semibold">Email</th>
+                                    <th class="px-4 py-2 font-semibold">Phone</th>
+                                    <th class="px-4 py-2 font-semibold">Status</th>
+                                    <th class="px-4 py-2 font-semibold">Priority</th>
+                                    <th class="px-4 py-2 font-semibold">Service</th>
+                                    <th class="px-4 py-2 font-semibold">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let lead of recentLeads" class="even:bg-gray-50 hover:bg-blue-50">
+                                    <td class="px-4 py-2 font-medium">{{ lead.leadId }}</td>
+                                    <td class="px-4 py-2">{{ lead.name }}</td>
+                                    <td class="px-4 py-2">{{ lead.email }}</td>
+                                    <td class="px-4 py-2">{{ lead.phone }}</td>
+                                    <td class="px-4 py-2">
+                                        <span [ngClass]="{
+                                            'bg-green-100 text-green-800': lead.status === 'CONVERTED',
+                                            'bg-red-100 text-red-800': lead.status === 'LOST',
+                                            'bg-yellow-100 text-yellow-800': lead.status === 'NEW' || lead.status === 'CONTACTED' || lead.status === 'QUALIFIED'
+                                        }" class="rounded px-2 py-0.5 text-xs font-bold">
+                                            {{ lead.status }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <span [ngClass]="{
+                                            'bg-red-200 text-red-800': lead.priority === 'HIGH',
+                                            'bg-yellow-200 text-yellow-800': lead.priority === 'MEDIUM',
+                                            'bg-green-200 text-green-800': lead.priority === 'LOW'
+                                        }" class="rounded px-2 py-0.5 text-xs font-bold">
+                                            {{ lead.priority }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-2 text-xs">{{ lead.serviceRequired }}</td>
+                                    <td class="px-4 py-2 text-xs">{{ lead.createdAt | date:'short' }}</td>
+                                </tr>
+                                <tr *ngIf="recentLeads.length === 0">
+                                    <td class="px-4 py-2 text-center text-gray-400" colspan="8">No recent leads found
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </ng-container>
+        </main>
+    </div>
+</div>

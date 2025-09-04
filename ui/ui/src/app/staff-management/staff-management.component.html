@@ -1,0 +1,350 @@
+<div class="flex min-h-screen bg-gray-100 font-sans">
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Staff Management</h1>
+                        <p class="text-gray-600">Manage staff members, assignments, and performance</p>
+                    </div>
+                    <button (click)="openAddStaffModal()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                        <span class="material-icons text-sm">add</span>
+                        Add Staff
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="flex-1 p-6">
+            <!-- Search and Filters -->
+            <div class="bg-white rounded-xl shadow p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Search -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                        <div class="relative">
+                            <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="onSearch()"
+                                placeholder="Search by name, email, or employee ID..."
+                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <span class="material-icons absolute left-3 top-2.5 text-gray-400 text-sm">search</span>
+                        </div>
+                    </div>
+
+                    <!-- Department Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                        <select [(ngModel)]="departmentFilter" (change)="onDepartmentFilterChange()"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Departments</option>
+                            <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+                        </select>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select [(ngModel)]="statusFilter" (change)="onStatusFilterChange()"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Status</option>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+
+                    <!-- Clear Filters -->
+                    <div class="flex items-end">
+                        <button (click)="clearFilters()"
+                            class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                            Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                {{ error }}
+            </div>
+
+            <!-- Loading State -->
+            <div *ngIf="loading" class="flex justify-center items-center h-64">
+                <span class="text-lg text-gray-500">Loading staff...</span>
+            </div>
+
+            <!-- Staff List -->
+            <div *ngIf="!loading" class="bg-white rounded-xl shadow p-4 overflow-x-auto max-h-[500px] overflow-y-auto">
+                <table class="min-w-full text-sm text-left border-collapse">
+                    <thead class="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Staff Member</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Employee ID</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Position</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Department</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Phone</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Status</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let staffMember of staff" class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div
+                                            class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <span class="text-blue-600 font-medium text-sm">
+                                                {{ staffMember.firstName.charAt(0) }}{{
+                                                staffMember.lastName.charAt(0) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium">{{ staffMember.firstName }} {{ staffMember.lastName }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">{{ staffMember.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <!-- <td class="px-4 py-3">
+                                <div class="font-medium">{{ staffMember.firstName }} {{ staffMember.lastName }}</div>
+                                <div class="text-xs text-gray-500">{{ staffMember.email }}</div>
+                            </td> -->
+                            <td class="px-4 py-3">{{ staffMember.employeeId }}</td>
+                            <td class="px-4 py-3">{{ staffMember.position }}</td>
+                            <td class="px-4 py-3">
+                                <div>{{ staffMember.department }}</div>
+                                <!-- <div *ngIf="staffMember.updatedBy" class="text-xs text-gray-500">
+                                    Updated by {{ staffMember.updatedBy }}
+                                </div> -->
+                            </td>
+                            <td class="px-4 py-3">{{ staffMember.phone }}</td>
+                            <td class="px-4 py-3">
+                                <span [ngClass]="{
+                                    'bg-green-100 text-green-800': staffMember.isAvailable,
+                                    'bg-red-100 text-red-800': !staffMember.isAvailable
+                                }" class="px-2 py-1 rounded-full text-xs font-medium">
+                                    {{ staffMember.isAvailable ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <button (click)="viewStaffDetails(staffMember)"
+                                        class="text-indigo-600 hover:text-indigo-800 p-1" title="View Details">
+                                        <span class="material-icons text-base">visibility</span>
+                                    </button>
+                                    <button (click)="openEditStaffModal(staffMember)"
+                                        class="text-blue-600 hover:text-blue-800 p-1" title="Edit Staff">
+                                        <span class="material-icons text-base">edit</span>
+                                    </button>
+                                    <button (click)="viewStaffPerformance(staffMember)"
+                                        class="text-green-600 hover:text-green-800 p-1" title="View Performance">
+                                        <span class="material-icons text-base">analytics</span>
+                                    </button>
+                                    <button (click)="toggleStaffStatus(staffMember)"
+                                        [class]="staffMember.isAvailable ? 'text-yellow-600 hover:text-yellow-800' : 'text-green-600 hover:text-green-800'"
+                                        class="p-1" [title]="staffMember.isAvailable ? 'Deactivate' : 'Activate'">
+                                        <span class="material-icons text-base">{{ staffMember.isAvailable ? 'block' :
+                                            'check_circle' }}</span>
+                                    </button>
+                                    <button (click)="deleteStaff(staffMember)"
+                                        class="text-red-600 hover:text-red-800 p-1" title="Delete Staff">
+                                        <span class="material-icons text-base">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr *ngIf="staff.length === 0">
+                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                No staff members found
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <app-pagination [page]="currentPage + 1" [pageSize]="pageSize" [total]="totalElements"
+                [pageSizeOptions]="[5, 10, 25, 50]" (pageChange)="onPageChange($event)"
+                (pageSizeChange)="onPageSizeChange($event)">
+            </app-pagination>
+        </main>
+    </div>
+
+    <!-- Staff Form Modal -->
+    <app-staff-form-modal *ngIf="showStaffModal" [staff]="selectedStaff" (saved)="onStaffSaved($event)"
+        (cancelled)="onStaffModalCancelled()">
+    </app-staff-form-modal>
+
+    <!-- View Staff Details Modal -->
+    <div *ngIf="showViewModal && selectedStaffForView"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b">
+                <h2 class="text-xl font-semibold text-gray-800">Staff Details</h2>
+                <button (click)="closeViewModal()" class="text-gray-400 hover:text-gray-600">
+                    <span class="material-icons text-2xl">close</span>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Basic Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-blue-700 border-b pb-2">Basic Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Name:</span> {{ selectedStaffForView.firstName }} {{
+                                selectedStaffForView.lastName }}</div>
+                            <div><span class="font-semibold">Email:</span> {{ selectedStaffForView.email }}</div>
+                            <div><span class="font-semibold">Phone:</span> {{ selectedStaffForView.phone }}</div>
+                            <div><span class="font-semibold">Employee ID:</span> {{ selectedStaffForView.employeeId }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-red-700 border-b pb-2">Professional Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Position:</span> {{ selectedStaffForView.position }}</div>
+                            <div><span class="font-semibold">Department:</span> {{ selectedStaffForView.department }}
+                            </div>
+                            <div><span class="font-semibold">Joining Date:</span> {{ selectedStaffForView.joiningDate |
+                                date:'mediumDate' }}</div>
+                            <div><span class="font-semibold">Salary:</span> ₹{{ selectedStaffForView.salary || 'N/A' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Metrics -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-green-700 border-b pb-2">Performance Metrics</h3>
+                        <div class="space-y-3">
+                            <div *ngIf="!selectedStaffForView.totalAssignedClients && selectedStaffForView.totalAssignedClients !== 0"
+                                class="text-gray-500 text-sm">Loading performance data...</div>
+                            <div *ngIf="selectedStaffForView.totalAssignedClients !== undefined">
+                                <div><span class="font-semibold">Total Assigned Clients:</span> {{
+                                    selectedStaffForView.totalAssignedClients }}</div>
+                                <div><span class="font-semibold">Total Assigned Tasks:</span> {{
+                                    selectedStaffForView.totalAssignedTasks }}</div>
+                                <div><span class="font-semibold">Completed Tasks:</span> {{
+                                    selectedStaffForView.totalCompletedTasks }}</div>
+                                <div><span class="font-semibold">Pending Tasks:</span> {{
+                                    selectedStaffForView.totalPendingTasks }}</div>
+                                <div><span class="font-semibold">Overdue Tasks:</span> {{
+                                    selectedStaffForView.totalOverdueTasks }}</div>
+                                <div><span class="font-semibold">Last Activity:</span> {{
+                                    selectedStaffForView.lastActivity
+                                    | date:'short' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Supervisor Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-purple-700 border-b pb-2">Supervisor Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Supervisor:</span> {{ selectedStaffForView.supervisorName
+                                || 'N/A' }}</div>
+                            <div><span class="font-semibold">Employee ID:</span> {{
+                                selectedStaffForView.supervisorEmployeeId
+                                || 'N/A' }}</div>
+                            <div><span class="font-semibold">Supervisor Email:</span> {{
+                                selectedStaffForView.supervisorEmail || 'N/A' }}</div>
+                            <div><span class="font-semibold">Supervisor Phone:</span> {{
+                                selectedStaffForView.supervisorPhone || 'N/A' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Information -->
+                <div class="mt-8 space-y-4">
+                    <h3 class="text-lg font-medium text-gray-700 border-b pb-2">Audit Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Created By:</span> {{ selectedStaffForView.createdBy ||
+                                'N/A' }}</div>
+                            <div><span class="font-semibold">Created At:</span> {{ selectedStaffForView.createdAt |
+                                date:'short' }}</div>
+                        </div>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Updated By:</span> {{ selectedStaffForView.updatedBy ||
+                                'N/A' }}</div>
+                            <div><span class="font-semibold">Last Updated:</span> {{ selectedStaffForView.updatedAt |
+                                date:'short' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Modal -->
+    <div *ngIf="showPerformanceModal && selectedStaffForPerformance"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b">
+                <h2 class="text-xl font-semibold text-gray-800">
+                    Performance - {{ selectedStaffForPerformance.firstName }} {{ selectedStaffForPerformance.lastName }}
+                </h2>
+                <button (click)="closePerformanceModal()" class="text-gray-400 hover:text-gray-600">
+                    <span class="material-icons text-2xl">close</span>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+                <div *ngIf="!staffPerformance" class="flex justify-center items-center h-32">
+                    <span class="text-lg text-gray-500">Loading performance data...</span>
+                </div>
+
+                <div *ngIf="staffPerformance">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-blue-50 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-blue-700">{{ staffPerformance.totalAssignedClients }}
+                            </div>
+                            <div class="text-sm text-blue-600">Total Assigned Clients</div>
+                        </div>
+                        <div class="bg-indigo-50 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-indigo-700">{{ staffPerformance.totalAssigned }}</div>
+                            <div class="text-sm text-indigo-600">Total Assigned Tasks</div>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-green-700">{{ staffPerformance.completed }}</div>
+                            <div class="text-sm text-green-600">Completed</div>
+                        </div>
+                        <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-yellow-700">{{ staffPerformance.pending }}</div>
+                            <div class="text-sm text-yellow-600">Pending</div>
+                        </div>
+                        <div class="bg-red-50 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-red-700">{{ staffPerformance.overdue }}</div>
+                            <div class="text-sm text-red-600">Overdue</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div><span class="font-semibold">Last Activity:</span> {{ staffPerformance.lastActivity |
+                            date:'short' }}</div>
+                        <div><span class="font-semibold">Task Completion Rate:</span>
+                            {{ staffPerformance.totalAssigned > 0 ? ((staffPerformance.completed /
+                            staffPerformance.totalAssigned) * 100).toFixed(1) : 0 }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <app-confirm-dialog *ngIf="showDeleteDialog && staffToDelete" title="Delete Staff Member"
+        [message]="'Are you sure you want to delete ' + staffToDelete.firstName + ' ' + staffToDelete.lastName + '? This action cannot be undone.'"
+        confirmLabel="Delete" cancelLabel="Cancel" (confirm)="confirmDelete()" (cancel)="cancelDelete()">
+    </app-confirm-dialog>
+</div>

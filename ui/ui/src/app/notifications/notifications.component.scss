@@ -1,0 +1,7 @@
+.notification-item {
+    transition: all 0.2s ease-in-out;
+  }
+
+  .notification-item:hover {
+    transform: translateY(-1px);
+  }

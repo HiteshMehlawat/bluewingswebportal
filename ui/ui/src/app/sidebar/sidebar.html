@@ -1,0 +1,243 @@
+<aside [ngClass]="collapsed ? 'w-20' : 'w-64'"
+    class="bg-white shadow-lg flex flex-col justify-between min-h-screen transition-all duration-300">
+    <div>
+        <div class="flex items-center gap-3 px-6 py-2 border-b relative">
+            <span class="bg-blue-100 p-2 rounded-full">
+                <button (click)="toggleSidebar()"
+                    class="bg-blue-100 hover:bg-blue-200 rounded-full p-1 shadow transition-all">
+                    <span class="material-icons text-blue-600">{{ collapsed ? 'chevron_right' : 'chevron_left' }}</span>
+                </button>
+            </span>
+            <span *ngIf="!collapsed" class="text-xl font-bold text-blue-700 transition-all">
+                {{ isClient() ? 'Client Portal' : (isStaff() ? 'Staff Portal' : 'Admin Panel') }}
+            </span>
+        </div>
+        <nav class="mt-6 flex-1">
+            <ul class="space-y-1">
+                <!-- Dashboard - Different for each role -->
+                <li>
+                    <a class="flex items-center gap-3 px-6 py-3 bg-blue-50 text-blue-700 rounded-lg font-semibold"
+                        [routerLink]="isClient() ? '/dashboard/client' : (isStaff() ? '/dashboard/staff' : '/dashboard/admin')"
+                        routerLinkActive="bg-blue-50 text-blue-700">
+                        <span class="material-icons">dashboard</span>
+                        <span *ngIf="!collapsed">Dashboard</span>
+                    </a>
+                </li>
+
+                <!-- Admin/Staff Navigation -->
+                <ng-container *ngIf="!isClient()">
+                    <!-- Client & Lead Management Dropdown - Admin Only -->
+                    <li class="relative" *ngIf="isAdmin()">
+                        <button (click)="toggleClientLeadDropdown()"
+                            class="flex items-center justify-between w-full px-6 py-3 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                            [class.bg-blue-50]="clientLeadDropdownOpen" [class.text-blue-700]="clientLeadDropdownOpen">
+                            <div class="flex items-center gap-3">
+                                <span class="material-icons">people</span>
+                                <span *ngIf="!collapsed">Client Management</span>
+                            </div>
+                            <span *ngIf="!collapsed" class="material-icons transition-transform duration-200"
+                                [class.rotate-180]="clientLeadDropdownOpen">expand_more</span>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div *ngIf="clientLeadDropdownOpen && !collapsed"
+                            class="mt-1 ml-6 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                            <a class="flex items-center gap-3 px-6 py-2 hover:bg-blue-50 rounded-lg text-sm transition-all duration-200"
+                                routerLink="/dashboard/client-management"
+                                routerLinkActive="bg-blue-50 text-blue-700 font-medium">
+                                <span class="material-icons text-lg">people</span>
+                                <span>Client Management</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-6 py-2 hover:bg-blue-50 rounded-lg text-sm transition-all duration-200"
+                                routerLink="/dashboard/lead-management"
+                                routerLinkActive="bg-blue-50 text-blue-700 font-medium">
+                                <span class="material-icons text-lg">trending_up</span>
+                                <span>Lead Management</span>
+                            </a>
+                        </div>
+                    </li>
+
+                    <!-- Client & Lead Management Dropdown - Staff Only -->
+                    <li class="relative" *ngIf="isStaff()">
+                        <button (click)="toggleClientLeadDropdown()"
+                            class="flex items-center justify-between w-full px-6 py-3 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                            [class.bg-blue-50]="clientLeadDropdownOpen" [class.text-blue-700]="clientLeadDropdownOpen">
+                            <div class="flex items-center gap-3">
+                                <span class="material-icons">people</span>
+                                <span *ngIf="!collapsed">Client Management</span>
+                            </div>
+                            <span *ngIf="!collapsed" class="material-icons transition-transform duration-200"
+                                [class.rotate-180]="clientLeadDropdownOpen">expand_more</span>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div *ngIf="clientLeadDropdownOpen && !collapsed"
+                            class="mt-1 ml-6 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                            <a class="flex items-center gap-3 px-6 py-2 hover:bg-blue-50 rounded-lg text-sm transition-all duration-200"
+                                routerLink="/dashboard/client-management"
+                                routerLinkActive="bg-blue-50 text-blue-700 font-medium">
+                                <span class="material-icons text-lg">people</span>
+                                <span>My Clients</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-6 py-2 hover:bg-blue-50 rounded-lg text-sm transition-all duration-200"
+                                routerLink="/dashboard/my-leads"
+                                routerLinkActive="bg-blue-50 text-blue-700 font-medium">
+                                <span class="material-icons text-lg">trending_up</span>
+                                <span>My Assigned Leads</span>
+                            </a>
+                        </div>
+                    </li>
+
+                    <!-- Client Management - Available for both Admin and Staff (fallback) -->
+                    <li *ngIf="!isAdmin() && !isStaff()">
+                        <a class="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 rounded-lg"
+                            routerLink="/dashboard/client-management" routerLinkActive="bg-blue-50 text-blue-700">
+                            <span class="material-icons">people</span>
+                            <span *ngIf="!collapsed">Client Management</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 rounded-lg"
+                            routerLink="/dashboard/task-management" routerLinkActive="bg-blue-50 text-blue-700">
+                            <span class="material-icons">assignment</span>
+                            <span *ngIf="!collapsed">Tasks Management</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 rounded-lg"
+                            routerLink="/dashboard/service-requests" routerLinkActive="bg-blue-50 text-blue-700">
+                            <span class="material-icons">assignment_add</span>
+                            <span *ngIf="!collapsed">Service Requests</span>
+                        </a>
+                    </li>
+                </ng-container>
+
+                <!-- Client Navigation -->
+                <ng-container *ngIf="isClient()">
+                    <li>
+                        <a class="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 rounded-lg"
+                            routerLink="/dashboard/my-tasks" routerLinkActive="bg-blue-50 text-blue-700">
+                            <span class="material-icons">assignment</span>
+                            <span *ngIf="!collapsed">My Tasks</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 rounded-lg"
+                            routerLink="/dashboard/my-documents" routerLinkActive="bg-blue-50 text-blue-700">
+                            <span class="material-icons">attach_file</span>
+                            <span *ngIf="!collapsed">My Documents</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 rounded-lg"
+                            routerLink="/dashboard/service-requests" routerLinkActive="bg-blue-50 text-blue-700">
+                            <span class="material-icons">assignment_add</span>
+                            <span *ngIf="!collapsed">Service Requests</span>
+                        </a>
+                    </li>
+                </ng-container>
+
+
+                <!-- Admin/Staff Only Navigation -->
+                <ng-container *ngIf="!isClient()">
+                    <!-- Staff Management Dropdown - Admin Only -->
+                    <li class="relative" *ngIf="isAdmin()">
+                        <button (click)="toggleStaffDropdown()"
+                            class="flex items-center justify-between w-full px-6 py-3 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                            [class.bg-blue-50]="staffDropdownOpen" [class.text-blue-700]="staffDropdownOpen">
+                            <div class="flex items-center gap-3">
+                                <span class="material-icons">groups</span>
+                                <span *ngIf="!collapsed">Staff Management</span>
+                            </div>
+                            <span *ngIf="!collapsed" class="material-icons transition-transform duration-200"
+                                [class.rotate-180]="staffDropdownOpen">expand_more</span>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div *ngIf="staffDropdownOpen && !collapsed"
+                            class="mt-1 ml-6 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                            <a class="flex items-center gap-3 px-6 py-2 hover:bg-blue-50 rounded-lg text-sm transition-all duration-200"
+                                routerLink="/dashboard/staff-management"
+                                routerLinkActive="bg-blue-50 text-blue-700 font-medium">
+                                <span class="material-icons text-lg">person_add</span>
+                                <span>Staff Management</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-6 py-2 hover:bg-blue-50 rounded-lg text-sm transition-all duration-200"
+                                routerLink="/dashboard/staff-activities"
+                                routerLinkActive="bg-blue-50 text-blue-700 font-medium">
+                                <span class="material-icons text-lg">analytics</span>
+                                <span>Staff Activities</span>
+                            </a>
+                        </div>
+                    </li>
+
+                    <!-- Staff Activities - Available for both Admin and Staff -->
+                    <li *ngIf="isStaff() && !isAdmin()">
+                        <a class="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 rounded-lg"
+                            routerLink="/dashboard/staff-activities" routerLinkActive="bg-blue-50 text-blue-700">
+                            <span class="material-icons">analytics</span>
+                            <span *ngIf="!collapsed">My Activities</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 rounded-lg"
+                            routerLink="/dashboard/document-management" routerLinkActive="bg-blue-50 text-blue-700">
+                            <span class="material-icons">attach_file</span>
+                            <span *ngIf="!collapsed">Documents</span>
+                        </a>
+                    </li>
+                    <!-- <li>
+                        <a class="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 rounded-lg"
+                            routerLink="/dashboard/deadline-management" routerLinkActive="bg-blue-50 text-blue-700">
+                            <span class="material-icons">event</span>
+                            <span *ngIf="!collapsed">Deadlines</span>
+                        </a>
+                    </li> -->
+                    <li>
+                        <a class="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 rounded-lg"
+                            routerLink="/dashboard/staff-profile" routerLinkActive="bg-blue-50 text-blue-700">
+                            <span class="material-icons">person</span>
+                            <span *ngIf="!collapsed">My Profile</span>
+                        </a>
+                    </li>
+
+                </ng-container>
+
+                <!-- Notifications - Available for all users -->
+                <li>
+                    <a class="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 rounded-lg"
+                        routerLink="/dashboard/notifications" routerLinkActive="bg-blue-50 text-blue-700">
+                        <span class="material-icons">notifications</span>
+                        <span *ngIf="!collapsed">Notifications</span>
+                    </a>
+                </li>
+
+                <!-- Client Only Navigation -->
+                <ng-container *ngIf="isClient()">
+                    <li>
+                        <a class="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 rounded-lg"
+                            routerLink="/dashboard/profile" routerLinkActive="bg-blue-50 text-blue-700">
+                            <span class="material-icons">person</span>
+                            <span *ngIf="!collapsed">My Profile</span>
+                        </a>
+                    </li>
+                </ng-container>
+            </ul>
+        </nav>
+    </div>
+    <div class="p-6">
+        <div class="flex items-center gap-3">
+            <span class="bg-blue-100 p-2 rounded-full">
+                <span class="material-icons text-blue-600">
+                    {{ isClient() ? 'person' : (isStaff() ? 'engineering' : 'admin_panel_settings') }}
+                </span>
+            </span>
+            <div *ngIf="!collapsed" class="flex-1">
+                <p class="font-semibold text-blue-700">BlueWing Tax Portal</p>
+                <p class="text-xs text-gray-500">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</p>
+                <p class="text-xs text-gray-400">{{ currentUser?.role }}</p>
+            </div>
+        </div>
+    </div>
+</aside>

@@ -1,0 +1,102 @@
+.service-selection-container {
+  @apply w-full;
+
+  .error-message {
+    @apply flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-red-700;
+  }
+
+  .loading-indicator {
+    @apply flex items-center justify-center gap-2 p-4 text-gray-600;
+    
+    .material-icons {
+      @apply text-blue-500;
+    }
+  }
+
+  .service-selection-form {
+    @apply space-y-4;
+
+    .form-group {
+      @apply space-y-2;
+
+      .form-label {
+        @apply block text-sm font-medium text-gray-700;
+      }
+
+      .form-select {
+        @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+        
+        &:focus {
+          @apply border-blue-500 ring-2 ring-blue-500 ring-opacity-50;
+        }
+      }
+    }
+
+    .no-services {
+      @apply flex items-center gap-2 p-4 bg-gray-50 border border-gray-200 rounded-lg;
+    }
+  }
+
+  .selected-service-display {
+    @apply mt-4;
+
+    .selected-service-card {
+      @apply p-4 bg-blue-50 border border-blue-200 rounded-lg;
+
+      .selected-service-header {
+        @apply flex items-center gap-2 mb-3;
+
+        .selected-service-title {
+          @apply text-lg font-semibold text-gray-900;
+        }
+      }
+
+      .selected-service-details {
+        @apply space-y-2;
+
+        .service-path {
+          @apply flex items-center gap-1 text-sm;
+        }
+
+        .service-description {
+          @apply text-sm text-gray-600 italic;
+        }
+
+        .service-hours {
+          @apply flex items-center gap-1 text-sm;
+        }
+      }
+
+      .clear-selection-btn {
+        @apply mt-3 flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors;
+      }
+    }
+  }
+}
+
+// Animation for loading spinner
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive design
+@media (max-width: 640px) {
+  .service-selection-container {
+    .selected-service-display {
+      .selected-service-card {
+        .selected-service-header {
+          @apply flex-col items-start gap-1;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,368 @@
+<div class="flex min-h-screen bg-gray-100 font-sans">
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">
+                            {{ isStaff ? 'My Assigned Clients' : 'Client Management' }}
+                        </h1>
+                        <p class="text-gray-600">
+                            {{ isStaff ? 'View clients assigned to you through tasks' : 'Manage your clients and their
+                            information' }}
+                        </p>
+                    </div>
+                    <button *ngIf="isAdmin" (click)="openAddClientModal()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                        <span class="material-icons text-sm">add</span>
+                        Add Client
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="flex-1 p-6">
+            <!-- Search and Filters -->
+            <div class="bg-white rounded-xl shadow p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Search Clients</label>
+                        <div class="relative">
+                            <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="onSearch()"
+                                placeholder="Search by name, email, or company..."
+                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <span class="material-icons absolute left-3 top-2.5 text-gray-400">search</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
+                        <select [(ngModel)]="statusFilter" (change)="onStatusFilterChange()"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Status</option>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button (click)="clearFilters()"
+                            class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                            Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                {{ error }}
+            </div>
+
+            <!-- Loading State -->
+            <div *ngIf="loading" class="flex justify-center items-center h-64">
+                <span class="text-lg text-gray-500">Loading clients...</span>
+            </div>
+
+            <!-- Clients Table -->
+            <div *ngIf="!loading" class="bg-white rounded-xl shadow p-4 overflow-x-auto max-h-[500px] overflow-y-auto">
+                <table class="min-w-full text-sm text-left border-collapse">
+                    <thead class="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Name</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Email</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Company</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Phone</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Status</th>
+                            <th *ngIf="!isStaff" class="px-4 py-2 font-semibold bg-gray-50">Assigned Staff</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let client of clients" class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                                <div class="font-medium">{{ client.firstName }} {{ client.lastName }}</div>
+                                <div class="text-xs text-gray-500">{{ client.clientType || 'INDIVIDUAL' }}</div>
+                            </td>
+                            <td class="px-4 py-3">{{ client.email }}</td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium">{{ client.companyName }}</div>
+                                <div class="text-xs text-gray-500">{{ client.companyType || 'N/A' }}</div>
+                            </td>
+                            <td class="px-4 py-3">{{ client.phone }}</td>
+                            <td class="px-4 py-3">
+                                <span [ngClass]="{
+                                    'bg-green-100 text-green-800': client.isActive,
+                                    'bg-red-100 text-red-800': !client.isActive
+                                }" class="px-2 py-1 rounded-full text-xs font-medium">
+                                    {{ client.isActive ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td *ngIf="!isStaff" class="px-4 py-3">
+                                <span *ngIf="client.assignedStaffName" class="text-sm">{{
+                                    client.assignedStaffName
+                                    }}</span>
+                                <span *ngIf="!client.assignedStaffName" class="text-sm text-gray-400">Not
+                                    assigned</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <button (click)="viewClientDetails(client)"
+                                        class="text-indigo-600 hover:text-indigo-800 p-1" title="View Details">
+                                        <span class="material-icons text-base">visibility</span>
+                                    </button>
+
+                                    <!-- Admin-only actions -->
+                                    <ng-container *ngIf="isAdmin">
+                                        <button (click)="openEditClientModal(client)"
+                                            class="text-blue-600 hover:text-blue-800 p-1" title="Edit Client">
+                                            <span class="material-icons text-base">edit</span>
+                                        </button>
+                                        <button (click)="openAssignStaffModal(client)"
+                                            class="text-purple-600 hover:text-purple-800 p-1" title="Assign Staff">
+                                            <span class="material-icons text-base">person_add</span>
+                                        </button>
+                                        <button (click)="toggleClientStatus(client)"
+                                            [class]="client.isActive ? 'text-yellow-600 hover:text-yellow-800' : 'text-green-600 hover:text-green-800'"
+                                            class="p-1"
+                                            [title]="client.isActive ? 'Deactivate Client' : 'Activate Client'">
+                                            <span class="material-icons text-base">{{ client.isActive ? 'block' :
+                                                'check_circle' }}</span>
+                                        </button>
+                                        <button (click)="deleteClient(client)"
+                                            class="text-red-600 hover:text-red-800 p-1" title="Delete Client">
+                                            <span class="material-icons text-base">delete</span>
+                                        </button>
+                                    </ng-container>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr *ngIf="clients.length === 0">
+                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                No clients found
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <app-pagination [page]="currentPage + 1" [pageSize]="pageSize" [total]="totalElements"
+                [pageSizeOptions]="[5, 10, 20, 50]" (pageChange)="onPageChange($event)"
+                (pageSizeChange)="onPageSizeChange($event)"></app-pagination>
+        </main>
+    </div>
+
+    <!-- Unified Client Form Modal -->
+    <app-client-form-modal *ngIf="showClientModal" [client]="selectedClient" (saved)="onClientSaved($event)"
+        (cancelled)="onClientModalCancelled()">
+    </app-client-form-modal>
+
+    <!-- View Client Details Modal -->
+    <div *ngIf="showViewModal && selectedClientForView"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b">
+                <h2 class="text-xl font-semibold text-gray-800">Client Details</h2>
+                <button (click)="closeViewModal()" class="text-gray-400 hover:text-gray-600">
+                    <span class="material-icons text-2xl">close</span>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Basic Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-blue-700 border-b pb-2">Basic Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Name:</span> {{ selectedClientForView.firstName }} {{
+                                selectedClientForView.lastName }}</div>
+                            <div><span class="font-semibold">Email:</span> {{ selectedClientForView.email }}</div>
+                            <div><span class="font-semibold">Phone:</span> {{ selectedClientForView.phone || 'N/A' }}
+                            </div>
+                            <div><span class="font-semibold">Status:</span>
+                                <span
+                                    [ngClass]="selectedClientForView.isActive ? 'text-green-600 font-bold' : 'text-red-600 font-bold'">
+                                    {{ selectedClientForView.isActive ? 'Active' : 'Inactive' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Company Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-red-700 border-b pb-2">Company Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Company Name:</span> {{ selectedClientForView.companyName
+                                || 'N/A' }}</div>
+                            <div><span class="font-semibold">Company Type:</span> {{ selectedClientForView.companyType
+                                || 'N/A' }}</div>
+                            <div><span class="font-semibold">GST Number:</span> {{ selectedClientForView.gstNumber ||
+                                'N/A' }}</div>
+                            <div><span class="font-semibold">PAN Number:</span> {{ selectedClientForView.panNumber ||
+                                'N/A' }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-pink-700 border-b pb-2">Address Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Address:</span> {{ selectedClientForView.address || 'N/A'
+                                }}</div>
+                            <div><span class="font-semibold">City:</span> {{ selectedClientForView.city || 'N/A' }}
+                            </div>
+                            <div><span class="font-semibold">State:</span> {{ selectedClientForView.state || 'N/A' }}
+                            </div>
+                            <div><span class="font-semibold">Pincode:</span> {{ selectedClientForView.pincode || 'N/A'
+                                }}</div>
+                            <div><span class="font-semibold">Country:</span> {{ selectedClientForView.country || 'N/A'
+                                }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Business Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-yellow-700 border-b pb-2">Business Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Business Type:</span> {{ selectedClientForView.businessType
+                                || 'N/A' }}</div>
+                            <div><span class="font-semibold">Industry:</span> {{ selectedClientForView.industry || 'N/A'
+                                }}</div>
+                            <div><span class="font-semibold">Website:</span> {{ selectedClientForView.website || 'N/A'
+                                }}</div>
+                            <div><span class="font-semibold">Client Type:</span> {{ selectedClientForView.clientType ||
+                                'INDIVIDUAL' }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-green-700 border-b pb-2">Contact Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Contact Person:</span> {{
+                                selectedClientForView.contactPerson || 'N/A' }}</div>
+                            <div><span class="font-semibold">Contact Phone:</span> {{ selectedClientForView.contactPhone
+                                || 'N/A' }}</div>
+                            <div><span class="font-semibold">Contact Email:</span> {{ selectedClientForView.contactEmail
+                                || 'N/A' }}</div>
+                            <div><span class="font-semibold">Emergency Contact:</span> {{
+                                selectedClientForView.emergencyContact || 'N/A' }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Assignment Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-purple-700 border-b pb-2">Assignment Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Assigned Staff:</span> {{
+                                selectedClientForView.assignedStaffName || 'Not Assigned' }}</div>
+                            <div *ngIf="selectedClientForView.assignedStaffId"><span class="font-semibold">Staff
+                                    ID:</span> {{ selectedClientForView.assignedStaffId }}</div>
+                            <div *ngIf="selectedClientForView.assignedStaffEmail"><span class="font-semibold">Staff
+                                    Email:</span> {{ selectedClientForView.assignedStaffEmail }}</div>
+                            <div *ngIf="selectedClientForView.assignedStaffPhone"><span class="font-semibold">Staff
+                                    Phone:</span> {{ selectedClientForView.assignedStaffPhone }}</div>
+                            <!-- <div><span class="font-semibold">Registration Date:</span> {{
+                                selectedClientForView.registrationDate ? (selectedClientForView.registrationDate |
+                                date:'mediumDate') : 'N/A' }}</div> -->
+                        </div>
+                    </div>
+
+                    <!-- Audit Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-gray-700 border-b pb-2">Audit Information</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Created By:</span>
+                                {{ selectedClientForView.createdBy || 'N/A' }}</div>
+                            <div><span class="font-semibold">Created At:</span> {{ selectedClientForView.createdAt |
+                                dateFormat:'medium' }}</div>
+                            <div><span class="font-semibold">Updated By:</span>
+                                {{ selectedClientForView.updatedBy || 'N/A' }}</div>
+                            <div><span class="font-semibold">Last Updated:</span> {{ selectedClientForView.updatedAt |
+                                dateFormat:'medium' }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Task Statistics (for staff) -->
+                    <div *ngIf="isStaff" class="space-y-4">
+                        <h3 class="text-lg font-medium text-indigo-700 border-b pb-2">Task Statistics</h3>
+                        <div class="space-y-3">
+                            <div><span class="font-semibold">Total Tasks:</span> {{ selectedClientForView.totalTasks ||
+                                0 }}</div>
+                            <div><span class="font-semibold">Completed Tasks:</span> {{
+                                selectedClientForView.completedTasks || 0 }}</div>
+                            <div><span class="font-semibold">Pending Tasks:</span> {{ selectedClientForView.pendingTasks
+                                || 0 }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-4 mt-8 pt-6 border-t">
+                    <button (click)="closeViewModal()"
+                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-400">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign Staff Modal -->
+    <div *ngIf="showAssignStaffModal && selectedClientForAssign"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b">
+                <h2 class="text-xl font-semibold text-gray-800">Assign Staff to Client</h2>
+                <button (click)="closeAssignStaffModal()" class="text-gray-400 hover:text-gray-600">
+                    <span class="material-icons text-2xl">close</span>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Client</label>
+                    <div class="text-gray-900 font-medium">{{ selectedClientForAssign.firstName }} {{
+                        selectedClientForAssign.lastName }}</div>
+                    <div class="text-sm text-gray-500">{{ selectedClientForAssign.companyName }}</div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Staff Member *</label>
+                    <select [(ngModel)]="selectedStaffId"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select Staff Member</option>
+                        <option *ngFor="let staff of availableStaff" [value]="staff.id">
+                            {{ staff.firstName }} {{ staff.lastName }} - {{ staff.position }} ({{ staff.employeeId }})
+                        </option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Select the staff member to assign to this client</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-4">
+                    <button (click)="closeAssignStaffModal()"
+                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button (click)="assignStaffToClient()" [disabled]="!selectedStaffId"
+                        class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Assign Staff
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Dialog -->
+<app-confirm-dialog *ngIf="showDeleteDialog && clientToDelete" title="Delete Client"
+    [message]="'Are you sure you want to delete ' + clientToDelete.firstName + ' ' + clientToDelete.lastName + '? This action cannot be undone.'"
+    confirmLabel="Delete" cancelLabel="Cancel" (confirm)="confirmDelete()" (cancel)="cancelDelete()">
+</app-confirm-dialog>

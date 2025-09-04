@@ -1,0 +1,270 @@
+// Service Request Component Styles
+
+// Modal animations
+.modal-enter {
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+.modal-leave {
+  animation: modalFadeOut 0.3s ease-in;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+// Table styles
+.table-container {
+  .table-header {
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background-color: #f9fafb;
+    }
+  }
+}
+
+// Status badge styles
+.status-badge {
+  &.pending {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  &.assigned {
+    @apply bg-blue-100 text-blue-800;
+  }
+  
+  &.in-progress {
+    @apply bg-orange-100 text-orange-800;
+  }
+  
+  &.completed {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  &.cancelled {
+    @apply bg-gray-100 text-gray-800;
+  }
+  
+  &.rejected {
+    @apply bg-red-100 text-red-800;
+  }
+}
+
+// Priority badge styles
+.priority-badge {
+  &.low {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  &.medium {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  &.high {
+    @apply bg-orange-100 text-orange-800;
+  }
+  
+  &.urgent {
+    @apply bg-red-100 text-red-800;
+  }
+}
+
+// Action button styles
+.action-button {
+  @apply p-1 rounded transition-colors duration-200;
+  
+  &:hover {
+    @apply bg-gray-100;
+  }
+  
+  &.edit {
+    @apply text-green-600 hover:text-green-900;
+  }
+  
+  &.delete {
+    @apply text-red-600 hover:text-red-900;
+  }
+  
+  &.view {
+    @apply text-blue-600 hover:text-blue-900;
+  }
+  
+  &.assign {
+    @apply text-purple-600 hover:text-purple-900;
+  }
+  
+  &.reject {
+    @apply text-orange-600 hover:text-orange-900;
+  }
+  
+  &.accept {
+    @apply text-green-600 hover:text-green-900;
+  }
+  
+  &.convert {
+    @apply text-indigo-600 hover:text-indigo-900;
+  }
+}
+
+// Form styles
+.form-group {
+  @apply mb-4;
+  
+  label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
+  }
+  
+  input, select, textarea {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200;
+    
+    &:focus {
+      @apply outline-none;
+    }
+    
+    &.error {
+      @apply border-red-500 focus:ring-red-500;
+    }
+  }
+  
+  .error-message {
+    @apply text-red-600 text-sm mt-1;
+  }
+}
+
+// Loading spinner
+.loading-spinner {
+  @apply inline-flex items-center;
+  
+  .spinner {
+    @apply animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600;
+  }
+  
+  .loading-text {
+    @apply ml-2 text-gray-600;
+  }
+}
+
+// Empty state
+.empty-state {
+  @apply text-center py-12;
+  
+  .empty-icon {
+    @apply text-6xl text-gray-400 mb-4;
+  }
+  
+  .empty-title {
+    @apply text-lg font-medium text-gray-900 mb-2;
+  }
+  
+  .empty-description {
+    @apply text-sm text-gray-500;
+  }
+}
+
+// Error state
+.error-state {
+  @apply bg-red-50 border border-red-200 rounded-lg p-4;
+  
+  .error-content {
+    @apply flex items-center;
+  }
+  
+  .error-icon {
+    @apply text-red-600 mr-2;
+  }
+  
+  .error-message {
+    @apply text-red-800;
+  }
+}
+
+// Pagination styles
+.pagination {
+  @apply flex items-center justify-between;
+  
+  .pagination-info {
+    @apply text-sm text-gray-700;
+  }
+  
+  .pagination-controls {
+    @apply flex items-center gap-2;
+  }
+  
+  .pagination-button {
+    @apply px-3 py-2 border border-gray-300 rounded-lg transition-colors duration-200;
+    
+    &:hover:not(:disabled) {
+      @apply bg-gray-50;
+    }
+    
+    &:disabled {
+      @apply opacity-50 cursor-not-allowed;
+    }
+  }
+  
+  .pagination-page {
+    @apply px-3 py-2 text-sm text-gray-700;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .table-container {
+    @apply overflow-x-auto;
+    
+    table {
+      @apply min-w-full;
+    }
+  }
+  
+  .action-buttons {
+    @apply flex-col gap-1;
+  }
+  
+  .search-filters {
+    @apply flex-col gap-4;
+  }
+}
+
+// Dark mode support (if needed)
+@media (prefers-color-scheme: dark) {
+  .dark-mode {
+    @apply bg-gray-900 text-white;
+    
+    .table-header {
+      th {
+        @apply bg-gray-800 text-gray-200;
+      }
+    }
+    
+    .table-body {
+      tr {
+        @apply border-gray-700;
+        
+        &:hover {
+          @apply bg-gray-800;
+        }
+      }
+    }
+  }
+}

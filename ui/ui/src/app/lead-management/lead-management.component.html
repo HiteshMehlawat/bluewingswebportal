@@ -1,0 +1,270 @@
+<div class="flex min-h-screen bg-gray-100 font-sans">
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">
+                            {{ isStaff ? 'My Assigned Leads' : 'Lead Management' }}
+                        </h1>
+                        <p class="text-gray-600">
+                            {{ isStaff ? 'View and manage your assigned leads' : 'Manage and track potential clients and
+                            leads' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="flex-1 p-6">
+            <!-- Search and Filters -->
+            <div class="bg-white rounded-xl shadow p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                    <!-- Search -->
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Search Leads</label>
+                        <div class="relative">
+                            <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="onSearch()"
+                                placeholder="Search by name, email, phone..."
+                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <span class="material-icons absolute left-3 top-2.5 text-gray-400">search</span>
+                        </div>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select [(ngModel)]="statusFilter" (change)="onStatusFilterChange()"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option *ngFor="let option of statusOptions" [value]="option.value">
+                                {{ option.label }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Priority Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                        <select [(ngModel)]="priorityFilter" (change)="onPriorityFilterChange()"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option *ngFor="let option of priorityOptions" [value]="option.value">
+                                {{ option.label }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Service Category Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Service Category</label>
+                        <select [(ngModel)]="selectedServiceCategory" (change)="onServiceCategoryChange()"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Categories</option>
+                            <option *ngFor="let category of serviceCategories" [value]="category.id">{{ category.name }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Service Subcategory Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Service Subcategory</label>
+                        <select [(ngModel)]="selectedServiceSubcategory" (change)="onServiceSubcategoryChange()"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            [disabled]="!selectedServiceCategory">
+                            <option value="">All Subcategories</option>
+                            <option *ngFor="let subcategory of serviceSubcategories" [value]="subcategory.id">{{
+                                subcategory.name }}</option>
+                        </select>
+                    </div>
+
+                    <!-- Service Item Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Service Item</label>
+                        <select [(ngModel)]="selectedServiceItem" (change)="onServiceItemChange()"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            [disabled]="!selectedServiceSubcategory">
+                            <option value="">All Service Items</option>
+                            <option *ngFor="let item of serviceItems" [value]="item.id">{{ item.name }}</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Actions -->
+                    <div class="flex items-end gap-2">
+                        <button (click)="applyFilters()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Apply
+                        </button>
+                        <button (click)="clearFilters()"
+                            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                {{ error }}
+            </div>
+
+            <!-- Loading State -->
+            <div *ngIf="loading" class="flex justify-center items-center h-64">
+                <span class="text-lg text-gray-500">Loading leads...</span>
+            </div>
+
+            <!-- Leads Table -->
+            <div *ngIf="!loading" class="bg-white rounded-xl shadow p-4 overflow-x-auto max-h-[500px] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        {{ isStaff ? 'My Assigned Leads' : 'Leads' }}
+                    </h2>
+                    <!-- <div class="flex items-center gap-4">
+                        <span class="text-sm text-gray-600">
+                            {{ totalElements }} total leads
+                        </span>
+                        <select [value]="pageSize" (change)="onPageSizeChange($any($event.target).value)"
+                            class="px-3 py-1 border border-gray-300 rounded-md text-sm">
+                            <option value="10">10 per page</option>
+                            <option value="25">25 per page</option>
+                            <option value="50">50 per page</option>
+                        </select>
+                    </div> -->
+                </div>
+
+                <table class="min-w-full text-sm text-left border-collapse">
+                    <thead class="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Lead Info</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Service</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Status</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Priority</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Assigned Staff</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Created</th>
+                            <th class="px-4 py-2 font-semibold bg-gray-50">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let lead of leads" class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                                <div class="font-medium">{{ lead.firstName }} {{ lead.lastName }}</div>
+                                <div class="text-xs text-gray-500">{{ lead.email }}</div>
+                                <div class="text-xs text-gray-500">{{ lead.phone }}</div>
+                                <div *ngIf="lead.companyName" class="text-xs text-gray-500">{{ lead.companyName }}</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium">{{ lead.serviceCategoryName }}</div>
+                                <div *ngIf="lead.serviceSubcategoryName"
+                                    class="text-xs text-gray-900 truncate max-w-xs">
+                                    {{ lead.serviceSubcategoryName }}
+                                </div>
+                                <div *ngIf="lead.serviceItemName" class="text-xs text-gray-500 truncate max-w-xs">
+                                    {{ lead.serviceItemName }}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                                    [class]="getStatusBadgeClass(lead.status)">
+                                    {{ lead.status }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                                    [class]="getPriorityBadgeClass(lead.priority)">
+                                    {{ lead.priority }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900">
+                                {{ lead.assignedStaffName || 'Unassigned' }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-500">
+                                {{ formatDate(lead.createdAt) }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <button (click)="viewLeadDetails(lead)"
+                                        class="text-indigo-600 hover:text-indigo-800 p-1" title="View Details">
+                                        <span class="material-icons text-base">visibility</span>
+                                    </button>
+
+                                    <!-- Staff actions - can edit but not delete or assign -->
+                                    <ng-container *ngIf="isStaff">
+                                        <button *ngIf="lead.status !== 'CONVERTED'" (click)="openEditLeadModal(lead)"
+                                            class="text-blue-600 hover:text-blue-800 p-1" title="Edit Lead">
+                                            <span class="material-icons text-base">edit</span>
+                                        </button>
+                                        <button *ngIf="lead.status !== 'CONVERTED'" (click)="convertToClient(lead)"
+                                            class="text-green-600 hover:text-green-800 p-1" title="Convert to Client">
+                                            <span class="material-icons text-base">person_add_alt</span>
+                                        </button>
+                                    </ng-container>
+
+                                    <!-- Admin-only actions -->
+                                    <ng-container *ngIf="isAdmin">
+                                        <button *ngIf="lead.status !== 'CONVERTED'" (click)="openEditLeadModal(lead)"
+                                            class="text-blue-600 hover:text-blue-800 p-1" title="Edit Lead">
+                                            <span class="material-icons text-base">edit</span>
+                                        </button>
+                                        <button (click)="openAssignStaffModal(lead)"
+                                            class="text-purple-600 hover:text-purple-800 p-1" title="Assign Staff">
+                                            <span class="material-icons text-base">person_add</span>
+                                        </button>
+                                        <button *ngIf="lead.status !== 'CONVERTED'" (click)="convertToClient(lead)"
+                                            class="text-green-600 hover:text-green-800 p-1" title="Convert to Client">
+                                            <span class="material-icons text-base">person_add_alt</span>
+                                        </button>
+                                        <button (click)="deleteLead(lead)" class="text-red-600 hover:text-red-800 p-1"
+                                            title="Delete Lead">
+                                            <span class="material-icons text-base">delete</span>
+                                        </button>
+                                    </ng-container>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Empty State -->
+                <div *ngIf="leads.length === 0 && !loading" class="text-center py-8">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No leads found</h3>
+                    <p class="mt-1 text-sm text-gray-500">Get started by creating a new lead.</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <app-pagination [page]="currentPage + 1" [total]="totalElements" [pageSize]="pageSize"
+                [pageSizeOptions]="pageSizeOptions" (pageChange)="goToPage($event - 1)"
+                (pageSizeChange)="onPageSizeChange($event)">
+            </app-pagination>
+        </main>
+    </div>
+</div>
+
+<!-- Delete Confirmation Dialog -->
+<app-confirm-dialog *ngIf="showDeleteDialog" [title]="deleteDialogConfig.title" [message]="deleteDialogConfig.message"
+    [confirmLabel]="deleteDialogConfig.confirmLabel" [cancelLabel]="deleteDialogConfig.cancelLabel"
+    (confirm)="confirmDelete()" (cancel)="cancelDelete()">
+</app-confirm-dialog>
+
+<!-- Toast Notifications -->
+<app-toast-notification></app-toast-notification>
+
+<!-- Lead Form Modal (Edit Only) -->
+<app-lead-form-modal *ngIf="showLeadModal" [lead]="selectedLead" [isEditMode]="isEditMode" (saved)="onLeadSaved($event)"
+    (cancelled)="onLeadModalCancelled()">
+</app-lead-form-modal>
+
+<!-- Lead Detail Modal (View Only) -->
+<app-lead-detail-modal *ngIf="showLeadDetailModal" [lead]="selectedLead" (closed)="onLeadDetailClosed()">
+</app-lead-detail-modal>
+
+<!-- Staff Assignment Modal -->
+<app-staff-assignment-modal *ngIf="showStaffAssignmentModal" [lead]="selectedLead" (assigned)="onStaffAssigned($event)"
+    (cancelled)="onStaffAssignmentCancelled()">
+</app-staff-assignment-modal>
